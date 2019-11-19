@@ -1,0 +1,2 @@
+include ':app', ':hfdlibrary'
+rootProject.name='HFD MSDK'
