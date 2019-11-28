@@ -40,7 +40,7 @@ public class HFDManager {
         settingCallback();
         getFlightThread();
         initDJIkey();
-        HFDEvent hfdEvent = new HFDEvent("00","00");
+        HFDEvent hfdEvent = new HFDEvent();
         hfdEvent.send();
     }
     public void takePhoto(){
