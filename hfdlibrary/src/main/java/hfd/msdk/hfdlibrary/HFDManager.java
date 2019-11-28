@@ -41,7 +41,9 @@ public class HFDManager {
         getFlightThread();
         initDJIkey();
         HFDEvent hfdEvent = new HFDEvent();
-        hfdEvent.send();
+        Object a = "aaa";
+
+        hfdEvent.send(a,"aaaaaaaaaaaaa");
     }
     public void takePhoto(){
         Log.d(TAG, "takePhoto");
