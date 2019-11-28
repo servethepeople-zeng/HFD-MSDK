@@ -4,8 +4,8 @@ import hfd.msdk.internal.HFDEventListener;
 
 public class HFDEvent {
 
-    private Object eventObj;
-    private String eventDes;
+//    private Object eventObj;
+//    private String eventDes;
 
     private HFDEventListener hfdEventListener;
 
@@ -15,24 +15,24 @@ public class HFDEvent {
 //        this.eventDes = eventDes;
 //    }
 
-    public Object getEventObj(){
-        return  eventObj;
-    }
-    public String getEventDes(){
-        return  eventDes;
-    }
-    public void setEventObj(Object eventObj){
-        this.eventObj = eventObj;
-    }
-    public void setEventDes(String eventDes){
-        this.eventDes = eventDes;
-    }
+//    public Object getEventObj(){
+//        return  eventObj;
+//    }
+//    public String getEventDes(){
+//        return  eventDes;
+//    }
+//    public void setEventObj(Object eventObj){
+//        this.eventObj = eventObj;
+//    }
+//    public void setEventDes(String eventDes){
+//        this.eventDes = eventDes;
+//    }
 
     public void addListener(HFDEventListener hfdEventListener){
         this.hfdEventListener = hfdEventListener;
     }
 
-    public void send(){
+    public void send(Object eventObj,String eventDes){
         hfdEventListener.hfdEvent(eventObj,eventDes);
     }
 }
