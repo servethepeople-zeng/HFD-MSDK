@@ -34,10 +34,6 @@ public class HFDManager {
     private int getHomeFlag = 0;
     private  HFDEventListener hfdEventListener;
 
-    public void addListener(HFDEventListener hfdEventListener){
-        this.hfdEventListener = hfdEventListener;
-    }
-
     public HFDManager(){
         Log.d(TAG, "HFDManager init");
         //dji回调函数们
@@ -45,7 +41,7 @@ public class HFDManager {
         getFlightThread();
         initDJIkey();
         HFDEvent hfdEvent = new HFDEvent("00","00");
-        hfdEventListener.hfdEvent(hfdEvent);
+        hfdEvent.send();
     }
     public void takePhoto(){
         Log.d(TAG, "takePhoto");
