@@ -2,6 +2,8 @@ package hfd.msdk.hfdlibrary;
 
 import android.util.Log;
 
+import java.util.List;
+
 import androidx.annotation.Nullable;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightControllerState;
@@ -14,6 +16,9 @@ import dji.keysdk.callback.KeyListener;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
+import hfd.msdk.internal.HFDEventListener;
+import hfd.msdk.model.HFDEvent;
+import hfd.msdk.model.TowerPoint;
 import hfd.msdk.utils.ToastUtils;
 
 import static hfd.msdk.utils.Helper.BytesToHexString;
@@ -27,6 +32,11 @@ public class HFDManager {
     private static DJIKey getDataKey, sendDataKey;
     private CommonCallbacks.CompletionCallbackWith  mDJICompletionCallbackc;
     private int getHomeFlag = 0;
+    private  HFDEventListener hfdEventListener;
+
+    public void addListener(HFDEventListener hfdEventListener){
+        this.hfdEventListener = hfdEventListener;
+    }
 
     public HFDManager(){
         Log.d(TAG, "HFDManager init");
@@ -34,9 +44,94 @@ public class HFDManager {
         settingCallback();
         getFlightThread();
         initDJIkey();
+        HFDEvent hfdEvent = new HFDEvent("00","00");
+        hfdEventListener.hfdEvent(hfdEvent);
     }
     public void takePhoto(){
-        Log.d(TAG, "into getFlightThread");
+        Log.d(TAG, "takePhoto");
+    }
+    public void takeRecord(int type){
+        Log.d(TAG, "takeRecord");
+    }
+    public void zooming(int zoomNum){
+        Log.d(TAG, "zoomNum");
+    }
+    public void changeView(int viewType){
+        Log.d(TAG, "changeView");
+    }
+    public void getSDStorage(){
+        Log.d(TAG, "getSDStorage");
+    }
+    public void returnCenter(){
+        Log.d(TAG, "returnCenter");
+    }
+    public void pointDirection (int xAxis,int yAxis){
+        Log.d(TAG, "pointDirection");
+    }
+    public void frameDirection (int xAxis,int yAxis,int frameLength){
+        Log.d(TAG, "frameDirection");
+    }
+    public void moveDirection (float xDegree,float yDegree){
+        Log.d(TAG, "moveDirection");
+    }
+    public void startTakeOff (){
+        //flightController.startTakeoff();
+        Log.d(TAG, "takeOff");
+    }
+    public void cancelTakeOff (){
+        //flightController.startTakeoff();
+        Log.d(TAG, "cancelTakeOff");
+    }
+    public void startLanding (){
+        Log.d(TAG, "startLanding");
+    }
+    public void cancelLanding (){
+        //flightController.startTakeoff();
+        Log.d(TAG, "cancelLanding");
+    }
+
+    public List<TowerPoint> loadTower(List<TowerPoint> towerList){
+        //flightController.startTakeoff();
+        Log.d(TAG, "loadTower");
+        return null;
+    }
+
+    public void uploadPoint(List<TowerPoint> towerList){
+        //flightController.startTakeoff();
+        Log.d(TAG, "uploadPoint");
+    }
+
+    public void startMission(){
+        //flightController.startTakeoff();
+        Log.d(TAG, "startMission");
+    }
+    public void pauseMission(){
+        //flightController.startTakeoff();
+        Log.d(TAG, "pauseMission");
+    }
+    public void resumeMission(){
+        //flightController.startTakeoff();
+        Log.d(TAG, "resumeMission");
+    }
+    public void breakpointMission(){
+        //flightController.startTakeoff();
+        Log.d(TAG, "breakpointMission");
+    }
+    public void stopMission(){
+        //flightController.startTakeoff();
+        Log.d(TAG, "stopMission");
+    }
+    public void startGoHome(){
+        //flightController.startTakeoff();
+        Log.d(TAG, "stopMission");
+    }
+    public void stopGoHome(){
+        //flightController.startTakeoff();
+        Log.d(TAG, "stopMission");
+    }
+    public List<String> getFlightData(){
+        Log.d(TAG, "getFlightData");
+        return null;
     }
 
     private void getFlightThread() {
