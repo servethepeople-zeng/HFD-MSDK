@@ -32,6 +32,7 @@ public class HFDManager {
     private CommonCallbacks.CompletionCallbackWith  mDJICompletionCallbackc;
     private int getHomeFlag = 0;
     private  HFDEventListener hfdEventListener;
+    public static Student student;
 
     public HFDManager(){
         Log.d(TAG, "HFDManager init");
@@ -39,7 +40,7 @@ public class HFDManager {
         settingCallback();
         getFlightThread();
         initDJIkey();
-        Student student=new Student();
+        //Student student=new Student();
         student.study();
         student.setName("donghongyujava");
     }
