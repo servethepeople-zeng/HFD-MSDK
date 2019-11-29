@@ -40,7 +40,19 @@ public class HFDManager {
         settingCallback();
         getFlightThread();
         initDJIkey();
-        //Student student=new Student();
+        student=new Student();
+        //给目标对象添加监听
+        student.addStudentListener(new StudentListener() {
+            @Override
+            public void doStudy(Event e) {
+                //重写监听的方法
+
+            }
+            @Override
+            public void doChangeName(Event e) {
+
+            }
+        });
         student.study();
         student.setName("donghongyujava");
     }
