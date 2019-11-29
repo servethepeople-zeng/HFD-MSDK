@@ -17,7 +17,6 @@ import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
 import hfd.msdk.internal.HFDEventListener;
-import hfd.msdk.model.HFDEvent;
 import hfd.msdk.model.TowerPoint;
 import hfd.msdk.utils.ToastUtils;
 
@@ -40,10 +39,9 @@ public class HFDManager {
         settingCallback();
         getFlightThread();
         initDJIkey();
-        HFDEvent hfdEvent = new HFDEvent();
-        Object a = "aaa";
-
-        hfdEvent.send(a,"aaaaaaaaaaaaa");
+        Student student=new Student();
+        student.study();
+        student.setName("donghongyujava");
     }
     public void takePhoto(){
         Log.d(TAG, "takePhoto");
