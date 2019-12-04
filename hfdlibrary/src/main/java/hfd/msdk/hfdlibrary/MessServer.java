@@ -1,7 +1,5 @@
 package hfd.msdk.hfdlibrary;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +40,6 @@ public class MessServer implements HFDObserverable {
     }
 
     public void setInfomation(byte mesType,String mesContent) {
-        Log.d("tagtag",mesType+"----"+mesContent);
         //消息更新，通知所有观察者
         notifyObserver(mesType,mesContent);
     }
