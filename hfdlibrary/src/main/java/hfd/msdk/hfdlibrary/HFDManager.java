@@ -30,6 +30,7 @@ public class HFDManager {
     private static DJIKey getDataKey, sendDataKey;
     private CommonCallbacks.CompletionCallbackWith  mDJICompletionCallbackc;
     private int getHomeFlag = 0;
+    public MessServer  messServer;
 
     public HFDManager(){
         Log.d(TAG, "HFDManager init");
@@ -37,7 +38,8 @@ public class HFDManager {
         settingCallback();
         getFlightThread();
         initDJIkey();
-        MessServer  messServer = new MessServer();
+        messServer = new MessServer();
+
         messServer.setInfomation((byte)0,"ok");
     }
     public void takePhoto(){
