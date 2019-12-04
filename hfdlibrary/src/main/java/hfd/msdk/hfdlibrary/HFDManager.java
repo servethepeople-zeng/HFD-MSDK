@@ -32,13 +32,13 @@ public class HFDManager {
     private int getHomeFlag = 0;
     public MessServer  messServer;
 
-    public HFDManager(){
+    public HFDManager(MessServer  messServer){
         Log.d(TAG, "HFDManager init");
         //dji回调函数们
         settingCallback();
         getFlightThread();
         initDJIkey();
-        messServer = new MessServer();
+        this.messServer = messServer;
 
         messServer.setInfomation((byte)0,"ok");
     }
