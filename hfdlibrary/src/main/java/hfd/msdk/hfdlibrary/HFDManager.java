@@ -39,16 +39,17 @@ public class HFDManager {
         getFlightThread();
         initDJIkey();
         this.messServer = messServer;
-
-        messServer.setInfomation((byte)0,"ok");
     }
     public void takePhoto(){
+        messServer.setInfomation((byte)0,"ok");
         Log.d(TAG, "takePhoto");
     }
     public void takeRecord(int type){
+        messServer.setInfomation((byte)1,"yes");
         Log.d(TAG, "takeRecord");
     }
     public void zooming(int zoomNum){
+        messServer.setInfomation((byte)2,"no");
         Log.d(TAG, "zoomNum");
     }
     public void changeView(int viewType){
