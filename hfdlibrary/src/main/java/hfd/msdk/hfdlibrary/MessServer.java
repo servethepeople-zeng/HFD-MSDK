@@ -1,5 +1,7 @@
 package hfd.msdk.hfdlibrary;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,14 +34,14 @@ public class MessServer implements HFDObserverable {
 
     //遍历
     @Override
-    public void notifyObserver(byte mesType,String mesContent) {
+    public void notifyObserver(byte mesType,JSONObject mesContent) {
         for(int i = 0; i < list.size(); i++) {
             HFDObserver oserver = list.get(i);
             oserver.update(mesType,mesContent);
         }
     }
 
-    public void setInfomation(byte mesType,String mesContent) {
+    public void setInfomation(byte mesType, JSONObject mesContent) {
         //消息更新，通知所有观察者
         notifyObserver(mesType,mesContent);
     }

@@ -10,7 +10,7 @@ package hfd.msdk.model;
 public class TowerPoint {
 
     private int id;//航点号
-    private int towerNum;//塔号(自定义编排的序号)
+    private String towerNum;//塔号(自定义编排的序号)
     private String towerTypeName;//塔类型
     private String kiloName;//塔牌上的千伏数
     private String lineName;//塔牌上的线名
@@ -20,12 +20,21 @@ public class TowerPoint {
     private double longitude;//经度
     private float altitude;//高度
     private float toward;//机头朝向
+    private int pointType;//航点类型 识别点 升降点 平飞点
+
+    public int getPointType() {
+        return pointType;
+    }
+
+    public void setPointType(int pointType) {
+        this.pointType = pointType;
+    }
 
     public int getId() {
         return id;
     }
 
-    public int getTowerNum() {
+    public String getTowerNum() {
         return towerNum;
     }
 
@@ -45,7 +54,7 @@ public class TowerPoint {
         this.id = id;
     }
 
-    public void setTowerNum(int towerNum){
+    public void setTowerNum(String towerNum){
         this.towerNum = towerNum;
     }
 
