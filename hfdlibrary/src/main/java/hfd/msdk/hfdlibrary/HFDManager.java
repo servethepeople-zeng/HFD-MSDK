@@ -4,14 +4,26 @@ import android.util.Log;
 
 import com.amap.api.maps.model.LatLng;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import dji.common.battery.BatteryState;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightControllerState;
+import dji.common.mission.waypoint.Waypoint;
+import dji.common.mission.waypoint.WaypointAction;
+import dji.common.mission.waypoint.WaypointActionType;
+import dji.common.mission.waypoint.WaypointMission;
+import dji.common.mission.waypoint.WaypointMissionFinishedAction;
+import dji.common.mission.waypoint.WaypointMissionFlightPathMode;
+import dji.common.mission.waypoint.WaypointMissionGotoWaypointMode;
+import dji.common.mission.waypoint.WaypointMissionHeadingMode;
+import dji.common.mission.waypoint.WaypointMissionState;
 import dji.common.model.LocationCoordinate2D;
 import dji.common.util.CommonCallbacks;
 import dji.keysdk.DJIKey;
@@ -20,6 +32,7 @@ import dji.keysdk.PayloadKey;
 import dji.keysdk.callback.ActionCallback;
 import dji.keysdk.callback.KeyListener;
 import dji.sdk.flightcontroller.FlightController;
+import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
 import hfd.msdk.mavlink.MAVLinkPacket;
@@ -94,6 +107,7 @@ import static hfd.msdk.model.IConstants.UVC_Horizontal_angle;
 import static hfd.msdk.model.IConstants.UVC_Vertical_angle;
 import static hfd.msdk.model.IConstants.latLng;
 import static hfd.msdk.utils.Helper.BytesToHexString;
+import static java.lang.Math.PI;
 
 public class HFDManager {
 
@@ -108,7 +122,14 @@ public class HFDManager {
     private static JSONObject object;
     public static int logLevelType = 0;
     private LatLng liveLatLng = new LatLng(latLng.latitude, latLng.longitude);
-    private int gcMode = 2,qZoom = 6;
+    private int gcMode = 2,qZoom = 6,realSeq = 0;
+    private List<TowerPoint> backPointList = new ArrayList<TowerPoint>();
+    private List<TowerPoint> tempPointList = new ArrayList<TowerPoint>();
+    private TowerPoint realPoint = new TowerPoint();
+    private WaypointMission mission;
+    private WaypointMissionOperator waypointMissionOperator;
+    private float currentAltidude = 0,compassData = 0;
+    private int battery1 = 0, battery2 = 0;
 
     public HFDManager(MessServer  messServer){
         //dji回调函数们
@@ -213,24 +234,9 @@ public class HFDManager {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
-                        //ToastUtils.setResultToToast("限远距离成功");
-                        try{
-                            object.put("result ","success");
-                        }catch (Exception e){
-                            object = null;
-                        }
-                        messServer.setInfomation((byte)3,object);
-
-                        FileUtils.writeLogFile(0, "call startTakeOff() method.");
+                        rebackMsg(3,"success","call startTakeOff() method success");
                     } else {
-                        try{
-                            object.put("result ",djiError.getDescription());
-                        }catch (Exception e){
-                            object = null;
-                        }
-                        messServer.setInfomation((byte)3,object);
-
-                        FileUtils.writeLogFile(2, djiError.getDescription());
+                        rebackMsg(3,"自动起飞失败，请查看飞机状态","call startTakeOff() method error message is "+djiError.getDescription());
                     }
                 }
             });
@@ -245,24 +251,9 @@ public class HFDManager {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
-                        //ToastUtils.setResultToToast("限远距离成功");
-                        try{
-                            object.put("result ","success");
-                        }catch (Exception e){
-                            object = null;
-                        }
-                        messServer.setInfomation((byte)4,object);
-
-                        FileUtils.writeLogFile(0, "call cancelTakeoff() method.");
+                        rebackMsg(4,"success","call cancelTakeOff() method success");
                     } else {
-                        try{
-                            object.put("result ",djiError.getDescription());
-                        }catch (Exception e){
-                            object = null;
-                        }
-                        messServer.setInfomation((byte)4,object);
-
-                        FileUtils.writeLogFile(2, djiError.getDescription());
+                        rebackMsg(4,"停止自动起飞失败，请查看飞机状态","call cancelTakeOff() method error message is "+djiError.getDescription());
                     }
                 }
             });
@@ -277,24 +268,9 @@ public class HFDManager {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
-                        //ToastUtils.setResultToToast("限远距离成功");
-                        try{
-                            object.put("result ","success");
-                        }catch (Exception e){
-                            object = null;
-                        }
-                        messServer.setInfomation((byte)5,object);
-
-                        FileUtils.writeLogFile(0, "call startLanding() method.");
+                        rebackMsg(5,"success","call startLanding() method success");
                     } else {
-                        try{
-                            object.put("result ",djiError.getDescription());
-                        }catch (Exception e){
-                            object = null;
-                        }
-                        messServer.setInfomation((byte)5,object);
-
-                        FileUtils.writeLogFile(2, djiError.getDescription());
+                        rebackMsg(5,"自动降落失败，请查看飞机状态","call startLanding() method error message is "+djiError.getDescription());
                     }
                 }
             });
@@ -309,24 +285,9 @@ public class HFDManager {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
-                        //ToastUtils.setResultToToast("限远距离成功");
-                        try{
-                            object.put("result ","success");
-                        }catch (Exception e){
-                            object = null;
-                        }
-                        messServer.setInfomation((byte)6,object);
-
-                        FileUtils.writeLogFile(0, "call cancelLanding() method.");
+                        rebackMsg(6,"success","call cancelLanding() method success");
                     } else {
-                        try{
-                            object.put("result ",djiError.getDescription());
-                        }catch (Exception e){
-                            object = null;
-                        }
-                        messServer.setInfomation((byte)6,object);
-
-                        FileUtils.writeLogFile(2, djiError.getDescription());
+                        rebackMsg(6,"停止自动降落失败，请查看飞机状态","call cancelLanding() method error message is "+djiError.getDescription());
                     }
                 }
             });
@@ -334,55 +295,284 @@ public class HFDManager {
     }
 
     public List<TowerPoint> loadTower(List<TowerPoint> towerList){
+        FileUtils.writeLogFile(0, "call loadTower() method.");
         for(int i=0;i<towerList.size();i++){
+            //only one tower
+            if(towerList.size() == 1){
+                sendErrorMessage("只上传了一个塔，生成的航点会在塔的正北和正南，请注意飞行安全！");
+                TowerPoint firPoint = new TowerPoint();
+                firPoint.setId(backPointList.size()+1);
+                firPoint.setTowerNum(towerList.get(0).getTowerNum());
+                firPoint.setTowerTypeName(towerList.get(0).getTowerTypeName());
+                firPoint.setAltitude(towerList.get(0).getAltitude());
+                firPoint.setLongitude(towerList.get(0).getLongitude());
+                firPoint.setLatitude(towerList.get(0).getLatitude()+0.00027);
+                firPoint.setToward(180.0f);
+                firPoint.setPointType(4);
+                backPointList.add(firPoint);
+                firPoint.setId(backPointList.size()+1);
+                firPoint.setAltitude(towerList.get(0).getAltitude()+15);
+                firPoint.setPointType(2);
+                backPointList.add(firPoint);
+                firPoint.setId(backPointList.size()+1);
+                firPoint.setLatitude(towerList.get(0).getLatitude()-0.00027);
+                firPoint.setPointType(2);
+                backPointList.add(firPoint);
+                firPoint.setId(backPointList.size()+1);
+                firPoint.setAltitude(towerList.get(0).getAltitude());
+                firPoint.setToward(0);
+                firPoint.setPointType(4);
+                backPointList.add(firPoint);
+                return backPointList;
+            }else {
+                //not the last tower
+                if(i<towerList.size()) {
+                    //直线塔
+                    if(towerList.get(0).getTowerTypeName().equals("zx")) {
+                        //经度一致
+                        if (towerList.get(i).getLongitude() == towerList.get(i + 1).getLongitude()) {
+                            double offset = 30/(Math.cos(towerList.get(i).getLatitude() * PI / 180.0)*111000);
+                            TowerPoint firPoint = new TowerPoint();
+                            firPoint.setId(backPointList.size() + 1);
+                            firPoint.setTowerNum(towerList.get(i).getTowerNum());
+                            firPoint.setTowerTypeName(towerList.get(i).getTowerTypeName());
+                            firPoint.setAltitude(towerList.get(i).getAltitude());
+                            firPoint.setLongitude(towerList.get(i).getLongitude()-offset);
+                            firPoint.setLatitude(towerList.get(i).getLatitude());
+                            firPoint.setToward(90.0f);
+                            firPoint.setPointType(4);
+                            backPointList.add(firPoint);
+                            firPoint.setId(tempPointList.size()+1);
+                            firPoint.setLatitude(towerList.get(i).getLongitude()+offset);
+                            firPoint.setToward(-90.0f);
+                            tempPointList.add(firPoint);
+                            //纬度一致
+                        }else if(towerList.get(i).getLatitude() == towerList.get(i + 1).getLatitude()){
+                            TowerPoint firPoint = new TowerPoint();
+                            firPoint.setId(backPointList.size() + 1);
+                            firPoint.setTowerNum(towerList.get(i).getTowerNum());
+                            firPoint.setTowerTypeName(towerList.get(i).getTowerTypeName());
+                            firPoint.setAltitude(towerList.get(i).getAltitude());
+                            firPoint.setLongitude(towerList.get(i).getLongitude());
+                            firPoint.setLatitude(towerList.get(i).getLatitude()-0.00027);
+                            firPoint.setToward(180.0f);
+                            firPoint.setPointType(4);
+                            backPointList.add(firPoint);
+                            firPoint.setId(tempPointList.size()+1);
+                            firPoint.setLatitude(towerList.get(i).getLatitude()+0.00027);
+                            firPoint.setToward(0.0f);
+                            tempPointList.add(firPoint);
+                            //
+                        }else {
 
+                        }
+                    }
+                }else{
+
+                }
+            }
         }
-        Log.d(TAG, "loadTower");
         return null;
     }
 
     public List<TowerPoint> loadMarkPoint(List<TowerPoint> towerList){
         //flightController.startTakeoff();
-        Log.d(TAG, "loadMarkPoint");
+        FileUtils.writeLogFile(0, "call loadMarkPoint() method.");
         return null;
     }
 
     public void uploadPoint(List<TowerPoint> towerList){
-        //flightController.startTakeoff();
-        Log.d(TAG, "uploadPoint");
+        backPointList.clear();
+        backPointList = towerList;
+        realPoint = backPointList.get(realSeq);
+        realSeq++;
+        mission = createWaypointMission();
+        DJIError djiError = waypointMissionOperator.loadMission(mission);
+        if(djiError == null) {
+            FileUtils.writeLogFile(0, "start uploadPoint().");
+            if (WaypointMissionState.READY_TO_RETRY_UPLOAD.equals(waypointMissionOperator.getCurrentState())
+                    || WaypointMissionState.READY_TO_UPLOAD.equals(waypointMissionOperator.getCurrentState())) {
+                waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if(djiError == null) {
+                            try{
+                                object.put("result ","success");
+                            }catch (Exception e){
+                                object = null;
+                            }
+                            messServer.setInfomation((byte)7,object);
+                            FileUtils.writeLogFile(0, "end uploadPoint()");
+                        }else{
+                            rebackMsg(7,"上传航点到飞机失败", "call uploadPoint() errorMsg is 上传航点到飞机失败");
+                        }
+                    }
+                });
+            } else {
+                rebackMsg(7,"飞机尚未准备就绪", "call uploadPoint() errorMsg is 飞机尚未准备就绪");
+            }
+        }else {
+            rebackMsg(7,"航点出错，请检查航点信息", "call uploadPoint() errorMsg is 航点出错，请检查航点信息");
+        }
     }
 
     public void startMission(){
         //flightController.startTakeoff();
-        Log.d(TAG, "startMission");
+        FileUtils.writeLogFile(0, "call startMission() method.");
+        if (mission != null) {
+            if(WaypointMissionState.READY_TO_EXECUTE.equals(waypointMissionOperator.getCurrentState())) {
+                waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        if(djiError == null){
+                            try{
+                                object.put("result ","start");
+                                object.put("tower ",realPoint.getTowerNum());
+                                object.put("point ",realPoint.getId());
+                            }catch (Exception e){
+                                object = null;
+                            }
+                            messServer.setInfomation((byte)15,object);
+                            FileUtils.writeLogFile(0, "");
+                        }else{
+                            rebackMsg(8,"开始自动飞行失败", "call startMission() errormsg is "+djiError.getDescription());
+                        }
+                    }
+                });
+            }else{
+                rebackMsg(8,"飞行航线飞行状态不对，请重新规划上传航线", "call startMission() 飞行航线飞行状态不对，请重新规划上传航线");
+            }
+        } else {
+            rebackMsg(8,"航线任务为不能空，请上传航点","call startMission() 航线任务为不能空，请上传航点");
+        }
     }
     public void pauseMission(){
-        //flightController.startTakeoff();
-        Log.d(TAG, "pauseMission");
+        FileUtils.writeLogFile(0, "call pauseMission() method.");
+        if(WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())) {
+            waypointMissionOperator.pauseMission(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if(djiError==null){
+                        rebackMsg(9,"success","call pauseMission() success now flight state is "+waypointMissionOperator.getCurrentState());
+                    }else{
+                        rebackMsg(9,"暂停航点飞行发送错误","call pauseMission() error message is "+djiError.getDescription());
+                    }
+                }
+            });
+        }else{
+            rebackMsg(9,"飞机状态错误，不能执行暂停飞行方法","call pauseMission() 无法执行暂停方法，飞机当前状态为"+waypointMissionOperator.getCurrentState());
+        }
     }
     public void resumeMission(){
-        //flightController.startTakeoff();
-        Log.d(TAG, "resumeMission");
+        FileUtils.writeLogFile(0, "call resumeMission() method.");
+        if(WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())) {
+            waypointMissionOperator.resumeMission(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if(djiError==null){
+                        rebackMsg(10,"success","call resumeMission() success now flight state is "+waypointMissionOperator.getCurrentState());
+                    }else{
+                        rebackMsg(10,"继续航点飞行发送错误","call resumeMission() error message is "+djiError.getDescription());
+                    }
+                }
+            });
+        }else{
+            rebackMsg(10,"飞机状态错误，不能继续航点飞行","call resumeMission() 无法执行继续飞行方法，飞机当前状态为"+waypointMissionOperator.getCurrentState());
+        }
     }
     public void breakpointMission(){
-        //flightController.startTakeoff();
-        Log.d(TAG, "breakpointMission");
+        FileUtils.writeLogFile(0, "call breakpointMission() method.");
+        if(realSeq<=backPointList.size()) {
+            if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())) {
+                rebackMsg(11, "success", "call breakpointMission() success now flight state is " + waypointMissionOperator.getCurrentState());
+            }
+        }else{
+            rebackMsg(11, "跳过杆塔失败，航线飞行已完成", "call breakpointMission() success now flight state is " + waypointMissionOperator.getCurrentState());
+        }
     }
     public void stopMission(){
-        //flightController.startTakeoff();
-        Log.d(TAG, "stopMission");
+        FileUtils.writeLogFile(0, "call stopMission() method.");
+        if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())
+                || WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())) {
+            waypointMissionOperator.stopMission(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if(djiError==null){
+                        rebackMsg(12,"success","call stopMission() success now flight state is "+waypointMissionOperator.getCurrentState());
+                    }else{
+                        rebackMsg(12,"停止航点飞行发送错误","call stopMission() error message is "+djiError.getDescription());
+                    }
+                }
+            });
+        }else{
+            rebackMsg(12,"飞机状态错误，无法执行停止航线飞行操作","call resumeMission() 无法执行继续飞行方法，飞机当前状态为"+waypointMissionOperator.getCurrentState());
+        }
     }
     public void startGoHome(){
-        //flightController.startTakeoff();
-        Log.d(TAG, "stopMission");
+        if(flightController == null) {
+            sendErrorMessage("无法获取飞机");
+            //flightController.startTakeoff();
+        }else{
+            flightController.startGoHome(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
+                        rebackMsg(13,"success","call startGoHome() method success");
+                    } else {
+                        rebackMsg(13,"返航，请查看飞机状态","call startGoHome() method error message is "+djiError.getDescription());
+                    }
+                }
+            });
+        }
     }
     public void stopGoHome(){
-        //flightController.startTakeoff();
-        Log.d(TAG, "stopMission");
+        if(flightController == null) {
+            sendErrorMessage("无法获取飞机");
+            //flightController.startTakeoff();
+        }else{
+            flightController.cancelGoHome(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
+                        rebackMsg(14,"success","call stopGoHome() method success");
+                    } else {
+                        rebackMsg(14,"停止返航失败，请查看飞机状态","call stopGoHome() method error message is "+djiError.getDescription());
+                    }
+                }
+            });
+        }
     }
-    public List<String> getFlightData(){
-        Log.d(TAG, "getFlightData");
-        return null;
+    public JSONObject getFlightData(){
+        FileUtils.writeLogFile(0, "call getFlightData() method.");
+        JSONObject dataObject = new JSONObject();
+        try {
+            if(flightController == null) {
+                sendErrorMessage("无法获取飞机");
+                dataObject.put("speed", "0");
+                dataObject.put("altitude", "0");
+                dataObject.put("longitude", "0");
+                dataObject.put("latitude", "0");
+                dataObject.put("battery1", "0");
+                dataObject.put("battery2", "0");
+                dataObject.put("compass", "0");
+            }else {
+                float speedx = flightController.getState().getVelocityX();
+                float speedy = flightController.getState().getVelocityY();
+                float speedz = flightController.getState().getVelocityZ();
+                float speed = (float)Math.sqrt(Math.pow(speedx,2) + Math.pow(speedx,2) + Math.pow(speedz,2));
+                dataObject.put("speed", speed+"");
+                dataObject.put("altitude", ""+currentAltidude);
+                dataObject.put("longitude", "0"+liveLatLng.longitude);
+                dataObject.put("latitude", "0"+liveLatLng.latitude);
+                dataObject.put("battery1", battery1);
+                dataObject.put("battery2", battery2);
+                dataObject.put("compass", compassData);
+            }
+        } catch (JSONException e) {
+            sendErrorMessage("程序异常");
+            FileUtils.writeLogFile(2, "call getFlightData() error is "+e.getMessage());
+        }
+        return dataObject;
     }
     public void setLogLevel(int mLogLevel){
         logLevelType = mLogLevel;
@@ -408,11 +598,23 @@ public class HFDManager {
                                         double latitude = flightControllerState.getAircraftLocation().getLatitude();
                                         double longitude = flightControllerState.getAircraftLocation().getLongitude();
                                         liveLatLng = new LatLng(latitude, longitude);
-//                                        currentAltidude = flightControllerState.getAircraftLocation().getAltitude();
+                                        currentAltidude = flightControllerState.getAircraftLocation().getAltitude();
                                     }
                                 });
                             }
-
+                            compassData = flightController.getCompass().getHeading();
+                            aircraft.getBatteries().get(0).setStateCallback(new BatteryState.Callback() {
+                                @Override
+                                public void onUpdate(BatteryState batteryState) {
+                                    battery1 = batteryState.getChargeRemainingInPercent();
+                                }
+                            });
+                            aircraft.getBatteries().get(1).setStateCallback(new BatteryState.Callback() {
+                                @Override
+                                public void onUpdate(BatteryState batteryState) {
+                                    battery2 = batteryState.getChargeRemainingInPercent();
+                                }
+                            });
                             Thread.sleep(1000);
                         }else{
                             aircraft = (Aircraft) DJISDKManager.getInstance().getProduct();
@@ -489,7 +691,7 @@ public class HFDManager {
 
     public static void sendErrorMessage(String mesContent){
         try{
-            object.put("errorMsg ",mesContent);
+            object.put("errorMsg",mesContent);
         }catch (Exception e){
             object = null;
         }
@@ -787,7 +989,7 @@ public class HFDManager {
         int blurZoom = 6;
         float newAngle = (float)rectX/(float) 1920*UVC_Horizontal_angle;
 
-        Log.d("画框命令传输", "newAngle："+newAngle);
+        //Log.d("画框命令传输", "newAngle："+newAngle);
         if(newAngle>=Qx30U_Zoom_H19){
             if(newAngle>Qx30U_Zoom_H8)
                 blurZoom = 8;
@@ -840,5 +1042,41 @@ public class HFDManager {
                 blurZoom = 31;
         }
         return blurZoom;
+    }
+
+    private WaypointMission createWaypointMission(){
+        WaypointMission.Builder builder = new WaypointMission.Builder();
+        builder.autoFlightSpeed(5f);
+        builder.maxFlightSpeed(10f);
+        //当飞机跟遥控器失去连接的时候是否停止航点飞行
+        builder.setExitMissionOnRCSignalLostEnabled(false);
+        builder.finishedAction(WaypointMissionFinishedAction.NO_ACTION);
+        //normal 直线飞行 curved 圆弧飞行
+        builder.flightPathMode(WaypointMissionFlightPathMode.NORMAL);
+        //飞往第一个航点的飞行方式 safely 飞到跟第一个航点一样高后再飞 POINT_TO_POINT 直接从当前地方飞到第一个航点
+        builder.gotoFirstWaypointMode(WaypointMissionGotoWaypointMode.SAFELY);
+        //以机头为正方向
+        builder.headingMode(WaypointMissionHeadingMode.AUTO);
+        builder.repeatTimes(1);
+
+        //List<Waypoint> waypointList = new ArrayList<>();
+
+        Waypoint eachWaypoint = new Waypoint(realPoint.getLatitude(),realPoint.getLongitude(), realPoint.getAltitude());
+        eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, (int)realPoint.getToward()));
+        eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 3000));
+        //waypointList.add(eachWaypoint);
+        //builder.waypointList(waypointList).waypointCount(waypointList.size());
+        builder.addWaypoint(eachWaypoint);
+        return builder.build();
+    }
+
+    private void rebackMsg(int type,String rebackContent, String noteLog){
+        try{
+            object.put("result ",rebackContent);
+        }catch (Exception e){
+            object = null;
+        }
+        messServer.setInfomation((byte)type,object);
+        FileUtils.writeLogFile(2, noteLog);
     }
 }
