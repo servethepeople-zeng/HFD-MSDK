@@ -13,6 +13,10 @@ import java.util.List;
 
 import dji.common.product.Model;
 import dji.sdk.sdkmanager.DJISDKManager;
+import hfd.msdk.model.Point;
+
+import static hfd.msdk.model.IConstants.Ea;
+import static hfd.msdk.model.IConstants.Eb;
 
 public class Helper {
 	
@@ -183,5 +187,24 @@ public class Helper {
 
         }
         return ret;
+    }
+
+    //根据经纬度 距离 角度 计算下一点坐标
+    public static Point GetPoint(double lat, double lng, double distance, double angle)
+    {
+
+        double dx = distance  * Math.sin(angle * Math.PI / 180.0);
+        double dy = distance  * Math.cos(angle * Math.PI / 180.0);
+
+        double ec = Eb + (Ea - Eb) * (90.0 - lat) / 90.0;
+        double ed = ec * Math.cos(lat * Math.PI / 180.0);
+
+        double newLon = (dx / ed + lng * Math.PI / 180.0) * 180.0 / Math.PI;
+        double newLat = (dy / ec + lat * Math.PI / 180.0) * 180.0 / Math.PI;
+
+        Point p = new Point();
+        p.setLatitude(newLat);
+        p.setLongitude(newLon);
+        return p;
     }
 }

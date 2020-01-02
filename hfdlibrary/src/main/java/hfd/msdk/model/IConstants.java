@@ -5,6 +5,13 @@ import com.amap.api.maps.model.LatLng;
 public class IConstants
 {
     public static LatLng latLng = new LatLng(36.686344,117.131224);
+    public static float TowDistance  = 30;
+    public static float TowHeight = 0;
+    public static float TowNavHeight = 10;
+    public static int TowVer = 0;//0从北到南 1从南到北
+    public static int TowHor = 0;//0从西到东 1从东到西
+    public static double Ea = 6378137;     //赤道半径（米）
+    public static double Eb = 6356725;     //极半径 （米）
 
     public static float Qx30U_Zoom_V7 = 33.061f;
     public static float Qx30U_Zoom_V22 = 5.68f;

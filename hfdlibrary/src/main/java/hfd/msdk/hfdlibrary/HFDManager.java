@@ -46,11 +46,14 @@ import hfd.msdk.mavlink.msg_picture_press;
 import hfd.msdk.mavlink.msg_picture_zoom;
 import hfd.msdk.mavlink.msg_radio_end;
 import hfd.msdk.mavlink.msg_radio_start;
+import hfd.msdk.model.Point;
 import hfd.msdk.model.TowerPoint;
 import hfd.msdk.utils.FileUtils;
 import hfd.msdk.utils.Helper;
 import hfd.msdk.utils.ToastUtils;
 
+import static hfd.msdk.model.IConstants.Ea;
+import static hfd.msdk.model.IConstants.Eb;
 import static hfd.msdk.model.IConstants.Qx30U_Zoom_H10;
 import static hfd.msdk.model.IConstants.Qx30U_Zoom_H11;
 import static hfd.msdk.model.IConstants.Qx30U_Zoom_H12;
@@ -103,11 +106,16 @@ import static hfd.msdk.model.IConstants.Qx30U_Zoom_V6;
 import static hfd.msdk.model.IConstants.Qx30U_Zoom_V7;
 import static hfd.msdk.model.IConstants.Qx30U_Zoom_V8;
 import static hfd.msdk.model.IConstants.Qx30U_Zoom_V9;
+import static hfd.msdk.model.IConstants.TowDistance;
+import static hfd.msdk.model.IConstants.TowHeight;
+import static hfd.msdk.model.IConstants.TowHor;
+import static hfd.msdk.model.IConstants.TowNavHeight;
+import static hfd.msdk.model.IConstants.TowVer;
 import static hfd.msdk.model.IConstants.UVC_Horizontal_angle;
 import static hfd.msdk.model.IConstants.UVC_Vertical_angle;
 import static hfd.msdk.model.IConstants.latLng;
 import static hfd.msdk.utils.Helper.BytesToHexString;
-import static java.lang.Math.PI;
+import static hfd.msdk.utils.Helper.GetPoint;
 
 public class HFDManager {
 
@@ -123,8 +131,8 @@ public class HFDManager {
     public static int logLevelType = 0;
     private LatLng liveLatLng = new LatLng(latLng.latitude, latLng.longitude);
     private int gcMode = 2,qZoom = 6,realSeq = 0;
-    private List<TowerPoint> backPointList = new ArrayList<TowerPoint>();
-    private List<TowerPoint> tempPointList = new ArrayList<TowerPoint>();
+    private static List<TowerPoint> backPointList = new ArrayList<TowerPoint>();
+    private static List<TowerPoint> tempPointList = new ArrayList<TowerPoint>();
     private TowerPoint realPoint = new TowerPoint();
     private WaypointMission mission;
     private WaypointMissionOperator waypointMissionOperator;
@@ -141,6 +149,31 @@ public class HFDManager {
         FileUtils.initLogFile();
         FileUtils.writeLogFile(0, "HFDManager init success.");
     }
+
+    public static void main(String args[]){
+        List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
+        TowerPoint tower1 = new TowerPoint();
+        tower1.setAltitude(53.5f);
+        tower1.setTowerNum("#6");
+        tower1.setTowerTypeName("zx");
+        tower1.setLatitude(39.1403381111111);
+        tower1.setLongitude(115.595425611111);
+        towerLists.add(tower1);
+        loadTower(towerLists);
+        System.out.println("航点个数="+backPointList.size());
+        System.out.println("航点"+backPointList.get(0).getId()+",纬度="+backPointList.get(0).getLatitude()+"，经度="+backPointList.get(0).getLongitude()+"，高度="+backPointList.get(0).getAltitude());
+        System.out.println("航点"+backPointList.get(1).getId()+",纬度="+backPointList.get(1).getLatitude()+"，经度="+backPointList.get(1).getLongitude()+"，高度="+backPointList.get(1).getAltitude());
+        System.out.println("航点"+backPointList.get(2).getId()+",纬度="+backPointList.get(2).getLatitude()+"，经度="+backPointList.get(2).getLongitude()+"，高度="+backPointList.get(2).getAltitude());
+        System.out.println("航点"+backPointList.get(3).getId()+",纬度="+backPointList.get(3).getLatitude()+"，经度="+backPointList.get(3).getLongitude()+"，高度="+backPointList.get(3).getAltitude());
+        System.out.println(backPointList.get(0).getId()+"，"+backPointList.get(0).getToward());
+        System.out.println(backPointList.get(1).getId()+"，"+backPointList.get(1).getToward());
+        System.out.println(backPointList.get(2).getId()+"，"+backPointList.get(2).getToward());
+        System.out.println(backPointList.get(3).getId()+"，"+backPointList.get(3).getToward());
+        System.out.println(backPointList.get(4).getId()+"，"+backPointList.get(4).getToward());
+        System.out.println(backPointList.get(5).getId()+"，"+backPointList.get(5).getToward());
+
+    }
+
     public void takePhoto(){
         createMAVLink(1,0);
         FileUtils.writeLogFile(0, "call takePhoto() method.");
@@ -294,84 +327,117 @@ public class HFDManager {
         }
     }
 
-    public List<TowerPoint> loadTower(List<TowerPoint> towerList){
-        FileUtils.writeLogFile(0, "call loadTower() method.");
-        for(int i=0;i<towerList.size();i++){
+    public static List<TowerPoint> loadTower(List<TowerPoint> towerList){
+        //FileUtils.writeLogFile(0, "call loadTower() method.");
             //only one tower
             if(towerList.size() == 1){
-                sendErrorMessage("只上传了一个塔，生成的航点会在塔的正北和正南，请注意飞行安全！");
-                TowerPoint firPoint = new TowerPoint();
-                firPoint.setId(backPointList.size()+1);
-                firPoint.setTowerNum(towerList.get(0).getTowerNum());
-                firPoint.setTowerTypeName(towerList.get(0).getTowerTypeName());
-                firPoint.setAltitude(towerList.get(0).getAltitude());
-                firPoint.setLongitude(towerList.get(0).getLongitude());
-                firPoint.setLatitude(towerList.get(0).getLatitude()+0.00027);
-                firPoint.setToward(180.0f);
-                firPoint.setPointType(4);
-                backPointList.add(firPoint);
-                firPoint.setId(backPointList.size()+1);
-                firPoint.setAltitude(towerList.get(0).getAltitude()+15);
-                firPoint.setPointType(2);
-                backPointList.add(firPoint);
-                firPoint.setId(backPointList.size()+1);
-                firPoint.setLatitude(towerList.get(0).getLatitude()-0.00027);
-                firPoint.setPointType(2);
-                backPointList.add(firPoint);
-                firPoint.setId(backPointList.size()+1);
-                firPoint.setAltitude(towerList.get(0).getAltitude());
-                firPoint.setToward(0);
-                firPoint.setPointType(4);
-                backPointList.add(firPoint);
-                return backPointList;
-            }else {
-                //not the last tower
-                if(i<towerList.size()) {
-                    //直线塔
-                    if(towerList.get(0).getTowerTypeName().equals("zx")) {
-                        //经度一致
-                        if (towerList.get(i).getLongitude() == towerList.get(i + 1).getLongitude()) {
-                            double offset = 30/(Math.cos(towerList.get(i).getLatitude() * PI / 180.0)*111000);
-                            TowerPoint firPoint = new TowerPoint();
-                            firPoint.setId(backPointList.size() + 1);
-                            firPoint.setTowerNum(towerList.get(i).getTowerNum());
-                            firPoint.setTowerTypeName(towerList.get(i).getTowerTypeName());
-                            firPoint.setAltitude(towerList.get(i).getAltitude());
-                            firPoint.setLongitude(towerList.get(i).getLongitude()-offset);
-                            firPoint.setLatitude(towerList.get(i).getLatitude());
-                            firPoint.setToward(90.0f);
-                            firPoint.setPointType(4);
-                            backPointList.add(firPoint);
-                            firPoint.setId(tempPointList.size()+1);
-                            firPoint.setLatitude(towerList.get(i).getLongitude()+offset);
-                            firPoint.setToward(-90.0f);
-                            tempPointList.add(firPoint);
-                            //纬度一致
-                        }else if(towerList.get(i).getLatitude() == towerList.get(i + 1).getLatitude()){
-                            TowerPoint firPoint = new TowerPoint();
-                            firPoint.setId(backPointList.size() + 1);
-                            firPoint.setTowerNum(towerList.get(i).getTowerNum());
-                            firPoint.setTowerTypeName(towerList.get(i).getTowerTypeName());
-                            firPoint.setAltitude(towerList.get(i).getAltitude());
-                            firPoint.setLongitude(towerList.get(i).getLongitude());
-                            firPoint.setLatitude(towerList.get(i).getLatitude()-0.00027);
-                            firPoint.setToward(180.0f);
-                            firPoint.setPointType(4);
-                            backPointList.add(firPoint);
-                            firPoint.setId(tempPointList.size()+1);
-                            firPoint.setLatitude(towerList.get(i).getLatitude()+0.00027);
-                            firPoint.setToward(0.0f);
-                            tempPointList.add(firPoint);
-                            //
-                        }else {
+                //sendErrorMessage("只上传了一个直线塔，生成的航点会在塔的北向和南向，请注意飞行安全！");
+                if(towerList.get(0).getTowerTypeName().equals("zx")) {
+                    //第一个点
+                    TowerPoint firPoint = new TowerPoint();
+                    Point myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==1?225-TowHor*90:TowHor*90-45);
+                    firPoint.setId(backPointList.size() + 1);
+                    firPoint.setTowerNum(towerList.get(0).getTowerNum());
+                    firPoint.setTowerTypeName(towerList.get(0).getTowerTypeName());
+                    firPoint.setAltitude(towerList.get(0).getAltitude()+TowHeight);
+                    firPoint.setLongitude(myPoint.longitude);
+                    firPoint.setLatitude(myPoint.latitude);
+                    firPoint.setToward(TowVer==1?45-TowHor*90:135-TowHor*270);
+                    firPoint.setPointType(4);
+                    backPointList.add(firPoint);
+                    //第二个点
+                    firPoint = new TowerPoint();
+                    myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==1?135+TowHor*90:45-TowHor*90);
+                    firPoint.setId(backPointList.size() + 1);
+                    firPoint.setTowerNum(towerList.get(0).getTowerNum());
+                    firPoint.setTowerTypeName(towerList.get(0).getTowerTypeName());
+                    firPoint.setAltitude(towerList.get(0).getAltitude() + TowHeight);
+                    firPoint.setLongitude(myPoint.longitude);
+                    firPoint.setLatitude(myPoint.latitude);
+                    firPoint.setToward(TowVer==1?TowHor*90-45:TowHor*270-135);
+                    firPoint.setPointType(4);
+                    backPointList.add(firPoint);
+                    //第三个点
+                    firPoint = new TowerPoint();
+                    firPoint.setId(backPointList.size() + 1);
+                    firPoint.setTowerNum(towerList.get(0).getTowerNum());
+                    firPoint.setTowerTypeName(towerList.get(0).getTowerTypeName());
+                    firPoint.setAltitude(towerList.get(0).getAltitude() + TowHeight + TowNavHeight);
+                    firPoint.setLongitude(myPoint.longitude);
+                    firPoint.setLatitude(myPoint.latitude);
+                    firPoint.setToward(TowVer==1?TowHor*90-45:TowHor*270-135);
+                    firPoint.setPointType(2);
+                    backPointList.add(firPoint);
+                    //第四个点
+                    firPoint = new TowerPoint();
+                    myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==1?45-TowHor*90:135+TowHor*90);
+                    firPoint.setId(backPointList.size() + 1);
+                    firPoint.setTowerNum(towerList.get(0).getTowerNum());
+                    firPoint.setTowerTypeName(towerList.get(0).getTowerTypeName());
+                    firPoint.setAltitude(towerList.get(0).getAltitude() + TowHeight + TowNavHeight);
+                    firPoint.setLongitude(myPoint.longitude);
+                    firPoint.setLatitude(myPoint.latitude);
+                    firPoint.setToward(TowVer==1?TowHor*270-135:TowHor*90-45);
+                    firPoint.setPointType(2);
+                    backPointList.add(firPoint);
+                    //第五个点
+                    firPoint = new TowerPoint();
+                    firPoint.setId(backPointList.size() + 1);
+                    firPoint.setTowerNum(towerList.get(0).getTowerNum());
+                    firPoint.setTowerTypeName(towerList.get(0).getTowerTypeName());
+                    firPoint.setAltitude(towerList.get(0).getAltitude() + TowHeight);
+                    firPoint.setLongitude(myPoint.longitude);
+                    firPoint.setLatitude(myPoint.latitude);
+                    firPoint.setToward(TowVer==1?TowHor*270-135:TowHor*90-45);
+                    firPoint.setPointType(4);
+                    backPointList.add(firPoint);
+                    //第六个点
+                    firPoint = new TowerPoint();
+                    myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==1?TowHor*90-45:225-90*TowHor);
+                    firPoint.setId(backPointList.size() + 1);
+                    firPoint.setTowerNum(towerList.get(0).getTowerNum());
+                    firPoint.setTowerTypeName(towerList.get(0).getTowerTypeName());
+                    firPoint.setAltitude(towerList.get(0).getAltitude() + TowHeight);
+                    firPoint.setLongitude(myPoint.longitude);
+                    firPoint.setLatitude(myPoint.latitude);
+                    firPoint.setToward(TowVer==1?135-TowHor*270:45-TowHor*90);
+                    firPoint.setPointType(4);
+                    backPointList.add(firPoint);
+                    return backPointList;
+                }else{
+                    //sendErrorMessage("只上传了一个耐张塔，无法进行航线规划");
+                    return null;
+                }
+                //有两个塔
+            }else if(towerList.size()==2){
+                if(towerList.get(0).getTowerTypeName().equals("nz")||towerList.get(1).getTowerTypeName().equals("nz")){
+                    //sendErrorMessage("只上传两个塔的情况下，塔类型不能为耐张塔");
+                    return null;
+                }else{
+                    //经度相同
+                    if(towerList.get(0).getLongitude()==towerList.get(1).getLongitude()){
+                        //第一个点在北边
+                        if(towerList.get(0).getLatitude()>towerList.get(1).getLatitude()){
+
+                        }else{
+
+                        }
+                    }else if(towerList.get(0).getLongitude()>towerList.get(1).getLongitude()){
+
+                    }else{
+
+                    }
+                    for(int i=0;i<towerList.size();i++) {
+                        //不是起始点
+                        if (i< towerList.size()) {
+
+                        }else{
 
                         }
                     }
-                }else{
-
                 }
+            } else {
             }
-        }
         return null;
     }
 
@@ -574,6 +640,12 @@ public class HFDManager {
         }
         return dataObject;
     }
+
+    public void setInspectionDir(int h,int v){
+        TowHor = h;
+        TowVer = v;
+    }
+
     public void setLogLevel(int mLogLevel){
         logLevelType = mLogLevel;
     }
@@ -1078,5 +1150,24 @@ public class HFDManager {
         }
         messServer.setInfomation((byte)type,object);
         FileUtils.writeLogFile(2, noteLog);
+    }
+
+    //根据经纬度 距离 角度 计算下一点坐标
+    public static Point getPoint(double lat, double lng, double distance, double angle)
+    {
+
+        double dx = distance * 1000 * Math.sin(angle * Math.PI / 180.0);
+        double dy = distance * 1000 * Math.cos(angle * Math.PI / 180.0);
+
+        double ec = Eb + (Ea - Eb) * (90.0 - lat) / 90.0;
+        double ed = ec * Math.cos(lat * Math.PI / 180.0);
+
+        double newLon = (dx / ed + lng * Math.PI / 180.0) * 180.0 / Math.PI;
+        double newLat = (dy / ec + lat * Math.PI / 180.0) * 180.0 / Math.PI;
+
+        Point p = new Point();
+        p.setLatitude(newLat);
+        p.setLongitude(newLon);
+        return p;
     }
 }
