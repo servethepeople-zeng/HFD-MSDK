@@ -15,7 +15,7 @@ public class TowerPoint {
     private String kiloName;//塔牌上的千伏数
     private String lineName;//塔牌上的线名
     private String lineNumber;//塔牌上的线号
-    private int towerNumber;//塔牌上的号
+    private String towerNumber;//塔牌上的号
     private double latitude;//纬度
     private double longitude;//经度
     private float altitude;//高度
@@ -102,11 +102,11 @@ public class TowerPoint {
         this.lineNumber = lineNumber;
     }
 
-    public int getTowerNumber() {
+    public String getTowerNumber() {
         return towerNumber;
     }
 
-    public void setTowerNumber(int towerNumber) {
+    public void setTowerNumber(String towerNumber) {
         this.towerNumber = towerNumber;
     }
 
