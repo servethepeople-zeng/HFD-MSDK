@@ -189,7 +189,15 @@ public class Helper {
         return ret;
     }
 
-    //根据经纬度 距离 角度 计算下一点坐标
+    /**
+     * 根据经纬度 距离 角度 计算下一点坐标
+     *
+     * @param lat 纬度
+     * @param lng 经度
+     * @param distance 距离
+     * @param angle 角度 正负都可用
+     * @return Point
+     */
     public static Point GetPoint(double lat, double lng, double distance, double angle)
     {
 
@@ -206,5 +214,84 @@ public class Helper {
         p.setLatitude(newLat);
         p.setLongitude(newLon);
         return p;
+    }
+
+    /**
+     * 根据两点经纬度 获取偏航角度
+     *
+     * @param lat1 纬度
+     * @param lng1 经度
+     * @param lat2 纬度2
+     * @param lng2 经度2
+     * @return Aangle(0-360)
+     */
+    public static double myGetAngel(Double lat1,Double lng1,Double lat2,Double lng2){
+        double a = Math.toRadians(90-lat2);
+
+        double b = Math.toRadians(90-lat1);
+
+        double ab = Math.toRadians(lng2-lng1);
+
+        double cosc = Math.cos(a)*Math.cos(b)+Math.sin(a)*Math.sin(b)*Math.cos(ab);
+
+        if (cosc < -1.0) cosc = -1.0;
+
+        if (cosc >1.0) cosc =1.0;
+
+        double c = Math.acos(cosc);
+
+        double sinA = (Math.sin(a)*Math.sin(ab))/Math.sin(c);
+
+        if (sinA < -1.0) sinA = -1.0;
+
+        if (sinA >1.0) sinA =1.0;
+
+        double A = Math.asin(sinA);
+
+        double Aangle = Math.toDegrees(A);
+        if (lng2 == lng1){
+
+        }else if (lat2 == lat1){
+
+        }else if (lng2 > lng1 && lat2 > lat1){//B相对于A来说位于第一象限
+
+        }else if (lng2 < lng1 && lat2 > lat1){//第二象限
+
+            Aangle =360+Aangle;
+
+        }else{//第三，四象限
+
+            Aangle =180-Aangle;
+
+        }
+        return Aangle;
+    }
+
+    /**
+     * 通过经纬度获取距离(单位：米)
+     *
+     * @param lat1 纬度1
+     * @param lng1 经度1
+     * @param lat2 纬度2
+     * @param lng2 经度2
+     * @return 距离
+     */
+    public static double getDistance(double lat1, double lng1, double lat2,
+                                     double lng2) {
+        double radLat1 = rad(lat1);
+        double radLat2 = rad(lat2);
+        double a = radLat1 - radLat2;
+        double b = rad(lng1) - rad(lng2);
+        double s = 2 * Math.asin(Math.sqrt(Math.pow(Math.sin(a / 2), 2)
+                + Math.cos(radLat1) * Math.cos(radLat2)
+                * Math.pow(Math.sin(b / 2), 2)));
+        s = s * Ea;
+        s = Math.round(s * 10000d) / 10000d;
+        return s;
+    }
+
+    private static double rad(double d)
+    {
+        return d * Math.PI / 180.0;
     }
 }
