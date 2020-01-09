@@ -648,11 +648,12 @@ public class PointUtils {
                 System.out.println("航点反向");
                 List<TowerPoint> tempList = new ArrayList<TowerPoint>();
                 for(int i=0;i<towerList.size();i++){
-                    tempList.set(i,towerList.get(towerList.size()-i-1));
+                    tempList.add(towerList.get(towerList.size()-i-1));
                 }
                 towerList.clear();
                 towerList = tempList;
             }
+            System.out.println("杆塔数为"+towerList.size());
             if(TowHor == 0){
                 System.out.println("从西向东生成");
                 for (int i = 0; i < towerList.size(); i++) {

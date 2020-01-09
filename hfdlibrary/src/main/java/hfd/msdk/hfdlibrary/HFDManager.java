@@ -150,30 +150,6 @@ public class HFDManager {
     public static void main(String args[]){
         List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
         TowerPoint tower1 = new TowerPoint();
-        tower1.setAltitude(53.5f);
-        tower1.setTowerNum("abcd");
-        tower1.setTowerTypeName("zx");
-        tower1.setTowerNumber("#1");
-        tower1.setLatitude(36.10194);
-        tower1.setLongitude(117.14923);
-        towerLists.add(tower1);
-        loadTower(towerLists);
-        tower1 = new TowerPoint();
-        tower1.setAltitude(54.5f);
-        tower1.setTowerNum("abcde");
-        tower1.setTowerTypeName("nz");
-        tower1.setTowerNumber("#2");
-        tower1.setLatitude(36.10067);
-        tower1.setLongitude(117.1522);
-        towerLists.add(tower1);
-        tower1 = new TowerPoint();
-        tower1.setAltitude(55.5f);
-        tower1.setTowerNum("abcde");
-        tower1.setTowerTypeName("zx");
-        tower1.setTowerNumber("#3");
-        tower1.setLatitude(36.10067);
-        tower1.setLongitude(117.15577);
-        towerLists.add(tower1);
         tower1 = new TowerPoint();
         tower1.setAltitude(56.5f);
         tower1.setTowerNum("abcde");
@@ -182,6 +158,35 @@ public class HFDManager {
         tower1.setLatitude(36.0972);
         tower1.setLongitude(117.16058);
         towerLists.add(tower1);
+
+        tower1 = new TowerPoint();
+        tower1.setAltitude(55.5f);
+        tower1.setTowerNum("abcde");
+        tower1.setTowerTypeName("zx");
+        tower1.setTowerNumber("#3");
+        tower1.setLatitude(36.10067);
+        tower1.setLongitude(117.15577);
+        towerLists.add(tower1);
+
+        tower1 = new TowerPoint();
+        tower1.setAltitude(54.5f);
+        tower1.setTowerNum("abcde");
+        tower1.setTowerTypeName("nz");
+        tower1.setTowerNumber("#2");
+        tower1.setLatitude(36.10067);
+        tower1.setLongitude(117.1522);
+        towerLists.add(tower1);
+
+        tower1.setAltitude(53.5f);
+        tower1.setTowerNum("abcd");
+        tower1.setTowerTypeName("zx");
+        tower1.setTowerNumber("#1");
+        tower1.setLatitude(36.10194);
+        tower1.setLongitude(117.14923);
+        towerLists.add(tower1);
+        //loadTower(towerLists);
+
+
         List<TowerPoint> mPointList = new ArrayList<TowerPoint>();
         mPointList = loadTower(towerLists);
         System.out.println("航点个数="+mPointList.size());
