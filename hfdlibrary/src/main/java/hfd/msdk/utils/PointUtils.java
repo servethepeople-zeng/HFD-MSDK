@@ -24,6 +24,7 @@ public class PointUtils {
     public static List<TowerPoint> backTempPointList = new ArrayList<TowerPoint>();
 
     public static List<TowerPoint> oneTGeneratePoints(List<TowerPoint> towerList){
+        backPointList.clear();
         List<TowerPoint> backPointList = new ArrayList<TowerPoint>();
         if(towerList.get(0).getTowerTypeName().equals("zx")) {
             //第一个点
@@ -110,6 +111,7 @@ public class PointUtils {
     }
 
     public static List<TowerPoint> twoTGeneratePoints(List<TowerPoint> towerList){
+        backPointList.clear();
         List<TowerPoint> backPointList = new ArrayList<TowerPoint>();
         if(towerList.get(0).getTowerTypeName().equals("nz")||towerList.get(1).getTowerTypeName().equals("nz")){
             //sendErrorMessage("只上传两个塔的情况下，塔类型不能为耐张塔");
@@ -638,7 +640,7 @@ public class PointUtils {
     }
 
     public static List<TowerPoint> mulTGeneratePoints(List<TowerPoint> towerList){
-
+        backPointList.clear();
         if(towerList.get(0).getTowerTypeName().equals("nz")||towerList.get(towerList.size()-1).getTowerTypeName().equals("nz")){
             //sendErrorMessage("上传的杆塔数据中起始点和终点不能为耐张塔");
             return null;
