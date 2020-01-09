@@ -134,6 +134,7 @@ public class HFDManager {
     private WaypointMissionOperator waypointMissionOperator;
     private float currentAltidude = 0,compassData = 0;
     private int battery1 = 0, battery2 = 0;
+    private String missonName = "";
 
     public HFDManager(MessServer  messServer){
         //dji回调函数们
@@ -150,24 +151,42 @@ public class HFDManager {
         List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
         TowerPoint tower1 = new TowerPoint();
         tower1.setAltitude(53.5f);
-        tower1.setTowerNum("#6");
+        tower1.setTowerNum("abcd");
         tower1.setTowerTypeName("zx");
-        tower1.setLatitude(39.1403381111111);
-        tower1.setLongitude(115.595425611111);
+        tower1.setTowerNumber("#1");
+        tower1.setLatitude(36.10194);
+        tower1.setLongitude(117.14923);
         towerLists.add(tower1);
         loadTower(towerLists);
-        System.out.println("航点个数="+backPointList.size());
-        System.out.println("航点"+backPointList.get(0).getId()+",纬度="+backPointList.get(0).getLatitude()+"，经度="+backPointList.get(0).getLongitude()+"，高度="+backPointList.get(0).getAltitude());
-        System.out.println("航点"+backPointList.get(1).getId()+",纬度="+backPointList.get(1).getLatitude()+"，经度="+backPointList.get(1).getLongitude()+"，高度="+backPointList.get(1).getAltitude());
-        System.out.println("航点"+backPointList.get(2).getId()+",纬度="+backPointList.get(2).getLatitude()+"，经度="+backPointList.get(2).getLongitude()+"，高度="+backPointList.get(2).getAltitude());
-        System.out.println("航点"+backPointList.get(3).getId()+",纬度="+backPointList.get(3).getLatitude()+"，经度="+backPointList.get(3).getLongitude()+"，高度="+backPointList.get(3).getAltitude());
-        System.out.println(backPointList.get(0).getId()+"，"+backPointList.get(0).getToward());
-        System.out.println(backPointList.get(1).getId()+"，"+backPointList.get(1).getToward());
-        System.out.println(backPointList.get(2).getId()+"，"+backPointList.get(2).getToward());
-        System.out.println(backPointList.get(3).getId()+"，"+backPointList.get(3).getToward());
-        System.out.println(backPointList.get(4).getId()+"，"+backPointList.get(4).getToward());
-        System.out.println(backPointList.get(5).getId()+"，"+backPointList.get(5).getToward());
-
+        tower1 = new TowerPoint();
+        tower1.setAltitude(54.5f);
+        tower1.setTowerNum("abcde");
+        tower1.setTowerTypeName("nz");
+        tower1.setTowerNumber("#2");
+        tower1.setLatitude(36.10067);
+        tower1.setLongitude(117.1522);
+        towerLists.add(tower1);
+        tower1 = new TowerPoint();
+        tower1.setAltitude(55.5f);
+        tower1.setTowerNum("abcde");
+        tower1.setTowerTypeName("zx");
+        tower1.setTowerNumber("#3");
+        tower1.setLatitude(36.10067);
+        tower1.setLongitude(117.15577);
+        towerLists.add(tower1);
+        tower1 = new TowerPoint();
+        tower1.setAltitude(56.5f);
+        tower1.setTowerNum("abcde");
+        tower1.setTowerTypeName("zx");
+        tower1.setTowerNumber("#4");
+        tower1.setLatitude(36.0972);
+        tower1.setLongitude(117.16058);
+        towerLists.add(tower1);
+        List<TowerPoint> mPointList = new ArrayList<TowerPoint>();
+        mPointList = loadTower(towerLists);
+        System.out.println("航点个数="+mPointList.size());
+        System.out.println("航点号："+mPointList.get(0).getId()+",随机塔号="+mPointList.get(0).getTowerNum()+",塔号="+mPointList.get(0).getTowerNumber()+",塔类型="+mPointList.get(0).getTowerTypeName()+",高度="+mPointList.get(0).getAltitude()+",经度="+mPointList.get(0).getLongitude()+"，纬度="+mPointList.get(0).getLatitude());
+        System.out.println("航点号："+mPointList.get(1).getId()+",随机塔号="+mPointList.get(1).getTowerNum()+",塔号="+mPointList.get(1).getTowerNumber()+",塔类型="+mPointList.get(1).getTowerTypeName()+",高度="+mPointList.get(1).getAltitude()+",经度="+mPointList.get(1).getLongitude()+"，纬度="+mPointList.get(1).getLatitude());
     }
 
     public void takePhoto(){
@@ -204,6 +223,10 @@ public class HFDManager {
     public void getSDStorage(){
         createMAVLink(10,0);
         FileUtils.writeLogFile(0, "call getSDStorage() method.");
+    }
+    public void setMissionName(String missionName){
+        this.missonName = missionName;
+
     }
     public void returnCenter(){
         createMAVLink(11,0);
@@ -335,6 +358,7 @@ public class HFDManager {
         }else if(towerList.size()==2){
             return twoTGeneratePoints(towerList);
         } else {
+            System.out.println("航点个数大于2");
             return mulTGeneratePoints(towerList);
         }
     }
@@ -520,6 +544,19 @@ public class HFDManager {
                 dataObject.put("battery2", "0");
                 dataObject.put("compass", "0");
             }else {
+                aircraft.getBatteries().get(0).setStateCallback(new BatteryState.Callback() {
+                    @Override
+                    public void onUpdate(BatteryState batteryState) {
+                        battery1 = batteryState.getChargeRemainingInPercent();
+                    }
+                });
+                aircraft.getBatteries().get(1).setStateCallback(new BatteryState.Callback() {
+                    @Override
+                    public void onUpdate(BatteryState batteryState) {
+                        battery2 = batteryState.getChargeRemainingInPercent();
+                    }
+                });
+
                 float speedx = flightController.getState().getVelocityX();
                 float speedy = flightController.getState().getVelocityY();
                 float speedz = flightController.getState().getVelocityZ();
@@ -573,18 +610,6 @@ public class HFDManager {
                                 });
                             }
                             compassData = flightController.getCompass().getHeading();
-                            aircraft.getBatteries().get(0).setStateCallback(new BatteryState.Callback() {
-                                @Override
-                                public void onUpdate(BatteryState batteryState) {
-                                    battery1 = batteryState.getChargeRemainingInPercent();
-                                }
-                            });
-                            aircraft.getBatteries().get(1).setStateCallback(new BatteryState.Callback() {
-                                @Override
-                                public void onUpdate(BatteryState batteryState) {
-                                    battery2 = batteryState.getChargeRemainingInPercent();
-                                }
-                            });
                             Thread.sleep(1000);
                         }else{
                             aircraft = (Aircraft) DJISDKManager.getInstance().getProduct();
