@@ -19,11 +19,14 @@ import dji.common.mission.waypoint.Waypoint;
 import dji.common.mission.waypoint.WaypointAction;
 import dji.common.mission.waypoint.WaypointActionType;
 import dji.common.mission.waypoint.WaypointMission;
+import dji.common.mission.waypoint.WaypointMissionDownloadEvent;
+import dji.common.mission.waypoint.WaypointMissionExecutionEvent;
 import dji.common.mission.waypoint.WaypointMissionFinishedAction;
 import dji.common.mission.waypoint.WaypointMissionFlightPathMode;
 import dji.common.mission.waypoint.WaypointMissionGotoWaypointMode;
 import dji.common.mission.waypoint.WaypointMissionHeadingMode;
 import dji.common.mission.waypoint.WaypointMissionState;
+import dji.common.mission.waypoint.WaypointMissionUploadEvent;
 import dji.common.model.LocationCoordinate2D;
 import dji.common.util.CommonCallbacks;
 import dji.keysdk.DJIKey;
@@ -32,7 +35,9 @@ import dji.keysdk.PayloadKey;
 import dji.keysdk.callback.ActionCallback;
 import dji.keysdk.callback.KeyListener;
 import dji.sdk.flightcontroller.FlightController;
+import dji.sdk.mission.MissionControl;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
+import dji.sdk.mission.waypoint.WaypointMissionOperatorListener;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
 import hfd.msdk.mavlink.MAVLinkPacket;
@@ -132,6 +137,7 @@ public class HFDManager {
     private TowerPoint realPoint = new TowerPoint();
     private WaypointMission mission;
     private WaypointMissionOperator waypointMissionOperator;
+    private WaypointMissionOperatorListener listener;
     private float currentAltidude = 0,compassData = 0;
     private int battery1 = 0, battery2 = 0;
     private String missonName = "";
@@ -143,6 +149,10 @@ public class HFDManager {
         initDJIkey();
         this.messServer = messServer;
         object = new JSONObject();
+
+        waypointMissionOperator = MissionControl.getInstance().getWaypointMissionOperator();
+        setUpListener();
+
         FileUtils.initLogFile();
         FileUtils.writeLogFile(0, "HFDManager init success.");
     }
@@ -1094,6 +1104,65 @@ public class HFDManager {
         }
         messServer.setInfomation((byte)type,object);
         FileUtils.writeLogFile(2, noteLog);
+    }
+
+    private void setUpListener() {
+        // Example of Listener
+        listener = new WaypointMissionOperatorListener() {
+            @Override
+            public void onDownloadUpdate(@NonNull WaypointMissionDownloadEvent waypointMissionDownloadEvent) {
+                // Example of Download Listener
+                if (waypointMissionDownloadEvent.getProgress() != null
+                        && waypointMissionDownloadEvent.getProgress().isSummaryDownloaded
+                        && waypointMissionDownloadEvent.getProgress().downloadedWaypointIndex == 2) {
+                    ToastUtils.setResultToToast("Download successful!");
+                }
+                //updateWaypointMissionState();
+            }
+
+            @Override
+            public void onUploadUpdate(@NonNull WaypointMissionUploadEvent waypointMissionUploadEvent) {
+                // Example of Upload Listener
+                if (waypointMissionUploadEvent.getProgress() != null
+                        && waypointMissionUploadEvent.getProgress().isSummaryUploaded
+                        && waypointMissionUploadEvent.getProgress().uploadedWaypointIndex == 2) {
+                    ToastUtils.setResultToToast("Upload successful!");
+                }
+                //updateWaypointMissionState();
+            }
+
+            @Override
+            public void onExecutionUpdate(@NonNull WaypointMissionExecutionEvent waypointMissionExecutionEvent) {
+                // Example of Execution Listener
+                Log.d(TAG,
+                        (waypointMissionExecutionEvent.getPreviousState() == null
+                                ? ""
+                                : waypointMissionExecutionEvent.getPreviousState().getName())
+                                + ", "
+                                + waypointMissionExecutionEvent.getCurrentState().getName()
+                                + (waypointMissionExecutionEvent.getProgress() == null
+                                ? ""
+                                : waypointMissionExecutionEvent.getProgress().targetWaypointIndex));
+                //updateWaypointMissionState();
+            }
+
+            @Override
+            public void onExecutionStart() {
+                ToastUtils.setResultToToast("Execution started!");
+                //updateWaypointMissionState();
+            }
+
+            @Override
+            public void onExecutionFinish(@Nullable DJIError djiError) {
+                ToastUtils.setResultToToast("Execution finished!");
+                //updateWaypointMissionState();
+            }
+        };
+
+        if (waypointMissionOperator != null && listener != null) {
+            // Example of adding listeners
+            waypointMissionOperator.addListener(listener);
+        }
     }
 
 }
