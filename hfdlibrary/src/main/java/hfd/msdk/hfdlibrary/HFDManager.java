@@ -464,6 +464,7 @@ public class HFDManager {
         }else{
             sendErrorMessage("飞机未连接，无法上传航点");
         }
+
     }
 
     public void startMission(){
@@ -1220,15 +1221,15 @@ public class HFDManager {
         builder.headingMode(WaypointMissionHeadingMode.AUTO);
         builder.repeatTimes(1);
 
-        //List<Waypoint> waypointList = new ArrayList<>();
+        List<Waypoint> waypointList = new ArrayList<>();
 
         Waypoint eachWaypoint = new Waypoint(realPoint.getLatitude(),realPoint.getLongitude(), realPoint.getAltitude());
         if(realPoint.getPointType() != 1)
             eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, (int)realPoint.getToward()));
         eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, stayTime));
-        //waypointList.add(eachWaypoint);
-        //builder.waypointList(waypointList).waypointCount(waypointList.size());
-        builder.addWaypoint(eachWaypoint);
+        waypointList.add(eachWaypoint);
+        builder.waypointList(waypointList).waypointCount(waypointList.size());
+        //builder.addWaypoint(eachWaypoint);
         return builder.build();
     }
 
