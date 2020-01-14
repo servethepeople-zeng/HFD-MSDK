@@ -122,8 +122,8 @@ public class PointUtils {
                 //第一个点在南边的话
                 if(towerList.get(0).getLatitude()<towerList.get(1).getLatitude()){
                     List<TowerPoint> tempList = new ArrayList<TowerPoint>();
-                    tempList.set(0,towerList.get(1));
-                    tempList.set(1,towerList.get(0));
+                    tempList.add(towerList.get(1));
+                    tempList.add(towerList.get(0));
                     towerList.clear();
                     towerList = tempList;
                 }
@@ -387,8 +387,8 @@ public class PointUtils {
             }else{
                 if(towerList.get(0).getLongitude()>towerList.get(1).getLongitude()){
                     List<TowerPoint> tempList = new ArrayList<TowerPoint>();
-                    tempList.set(0,towerList.get(1));
-                    tempList.set(1,towerList.get(0));
+                    tempList.add(towerList.get(1));
+                    tempList.add(towerList.get(0));
                     towerList.clear();
                     towerList = tempList;
                 }

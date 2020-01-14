@@ -165,7 +165,7 @@ public class HFDManager {
         List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
         TowerPoint tower1 = new TowerPoint();
         tower1 = new TowerPoint();
-        tower1.setAltitude(56.5f);
+        tower1.setAltitude(50f);
         tower1.setTowerNum("abcde");
         tower1.setTowerTypeName("zx");
         tower1.setTowerNumber("#4");
@@ -1292,6 +1292,16 @@ public class HFDManager {
             public void onExecutionFinish(@Nullable DJIError djiError) {
 
                 if(backPointList.size() == realSeq){
+
+                    try {
+                        object.put("result ", "end");
+                        object.put("tower ", realPoint.getTowerNum());
+                        object.put("point ", realPoint.getId());
+                    } catch (Exception e) {
+                        object = null;
+                    }
+                    messServer.setInfomation((byte) 15, object);
+                    FileUtils.writeLogFile(0, "end point "+realPoint.getTowerNum()+","+realPoint.getId());
 
                     myWayPointMissonState = 0;
                     rebackMsg(12,"result","success");
