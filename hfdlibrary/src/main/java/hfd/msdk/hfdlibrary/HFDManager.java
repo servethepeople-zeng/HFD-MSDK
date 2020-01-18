@@ -133,7 +133,7 @@ public class HFDManager {
     private LatLng liveLatLng = new LatLng(latLng.latitude, latLng.longitude);
     private int gcMode = 2,qZoom = 6,realSeq = 0;
     public static List<TowerPoint> backPointList = new ArrayList<TowerPoint>();
-    public static List<TowerPoint> tempPointList = new ArrayList<TowerPoint>();
+    public static List<String> breakList = new ArrayList<String>();
     private TowerPoint realPoint = new TowerPoint();
     private WaypointMission mission;
     private WaypointMissionOperator waypointMissionOperator;
@@ -141,7 +141,7 @@ public class HFDManager {
     private float currentAltidude = 0,compassData = 0;
     private int battery1 = 0, battery2 = 0;
     private String missonName = "";
-    //自定义航点飞行状态 0 等待飞行 执行停止操作或者未开始 READY_TO_UPLOAD. 1 READY_TO_EXECUTE 2 executing已开始航点飞行 3暂停航点飞行 4继续航点飞行 5执行拍照操作中 6拍照完成后等待上传航点数据 7 拍照完成后暂停
+    //自定义航点飞行状态 0 等待飞行 执行停止操作或者未开始 READY_TO_UPLOAD. 1 READY_TO_EXECUTE uploadmisson 之后 2 executing startmission之后 已开始航点飞行 3 executtion_paused 暂停航点飞行 4 执行拍照操作中  5 识别中暂停
     private int myWayPointMissonState = 0;
 
     public HFDManager(MessServer  messServer){
@@ -162,6 +162,7 @@ public class HFDManager {
     public static void main(String args[]){
         String a = "abcd";
         System.out.println(a.length());
+        System.out.println(a.substring(1));
         List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
         TowerPoint tower1 = new TowerPoint();
         tower1 = new TowerPoint();
@@ -422,47 +423,50 @@ public class HFDManager {
     }
 
     public void uploadPoint(List<TowerPoint> towerList){
-        if(flightController != null) {
-            if(myWayPointMissonState==0) {
-                backPointList.clear();
-                backPointList = towerList;
-                realPoint = new TowerPoint();
-                realPoint = backPointList.get(0);
-                mission = createWaypointMission(1000);
-                DJIError djiError = waypointMissionOperator.loadMission(mission);
-                if (djiError == null) {
-                    FileUtils.writeLogFile(0, "start uploadPoint().");
-                    if (WaypointMissionState.READY_TO_RETRY_UPLOAD.equals(waypointMissionOperator.getCurrentState())
-                            || WaypointMissionState.READY_TO_UPLOAD.equals(waypointMissionOperator.getCurrentState())) {
-                        waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                if (djiError == null) {
-                                    realSeq = 1;
-                                    myWayPointMissonState = 1;
-                                    try {
-                                        object.put("result ", "success");
-                                    } catch (Exception e) {
-                                        object = null;
+        if(towerList.size()<100) {
+            if (flightController != null) {
+                if (myWayPointMissonState == 0) {
+                    backPointList.clear();
+                    backPointList = towerList;
+                    realPoint = new TowerPoint();
+                    realPoint = backPointList.get(0);
+                    mission = createWaypointMission();
+                    DJIError djiError = waypointMissionOperator.loadMission(mission);
+                    if (djiError == null) {
+                        FileUtils.writeLogFile(0, "start uploadPoint().");
+                        if (WaypointMissionState.READY_TO_RETRY_UPLOAD.equals(waypointMissionOperator.getCurrentState())
+                                || WaypointMissionState.READY_TO_UPLOAD.equals(waypointMissionOperator.getCurrentState())) {
+                            waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(DJIError djiError) {
+                                    if (djiError == null) {
+                                        myWayPointMissonState = 1;
+                                        try {
+                                            object.put("result ", "success");
+                                        } catch (Exception e) {
+                                            object = null;
+                                        }
+                                        messServer.setInfomation((byte) 7, object);
+                                        FileUtils.writeLogFile(0, "end uploadPoint()");
+                                    } else {
+                                        rebackMsg(7, "上传航点到飞机失败，" + djiError.getDescription(), "call uploadPoint() errorMsg is 上传航点到飞机失败---" + djiError.getDescription());
                                     }
-                                    messServer.setInfomation((byte) 7, object);
-                                    FileUtils.writeLogFile(0, "end uploadPoint()");
-                                } else {
-                                    rebackMsg(7, "上传航点到飞机失败", "call uploadPoint() errorMsg is 上传航点到飞机失败---" + djiError.getDescription());
                                 }
-                            }
-                        });
+                            });
+                        } else {
+                            rebackMsg(7, "飞机未准备完成,稍等再试", "call uploadPoint() errorMsg is 飞机尚未准备就绪---" + djiError.getDescription());
+                        }
                     } else {
-                        rebackMsg(7, "飞机尚未准备就绪,稍等再试", "call uploadPoint() errorMsg is 飞机尚未准备就绪---" + djiError.getDescription());
+                        rebackMsg(7, "航点出错，请检查航点信息", "call uploadPoint() errorMsg is 航点出错，请检查航点信息---" + djiError.getDescription());
                     }
                 } else {
-                    rebackMsg(7, "航点出错，请检查航点信息", "call uploadPoint() errorMsg is 航点出错，请检查航点信息---" + djiError.getDescription());
+                    rebackMsg(7, "飞机航点飞行中，无法上传新航点", "call uploadPoint() errorMsg is 航点出错，请检查航点信息---");
                 }
-            }else{
-                sendErrorMessage("飞机执行任务中，无法上传新航点");
+            } else {
+                sendErrorMessage("飞机未连接，无法上传航点");
             }
         }else{
-            sendErrorMessage("飞机未连接，无法上传航点");
+            rebackMsg(7, "上传航点数不能大于99，请重新上传", "call uploadPoint() errorMsg is 上传航点数不能大于99，请重新上传");
         }
 
     }
@@ -488,7 +492,7 @@ public class HFDManager {
                                 messServer.setInfomation((byte) 15, object);
                                 FileUtils.writeLogFile(0, "start point "+realPoint.getTowerNum()+","+realPoint.getId());
                             } else {
-                                rebackMsg(8, "开始自动飞行失败", "call startMission() errormsg is " + djiError.getDescription());
+                                rebackMsg(8, "开始自动飞行失败，"+djiError.getDescription(), "call startMission() errormsg is " + djiError.getDescription());
                             }
                         }
                     });
@@ -505,22 +509,24 @@ public class HFDManager {
     public void pauseMission(){
         FileUtils.writeLogFile(0, "call pauseMission() method.");
         if(flightController != null) {
-            if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState()) && myWayPointMissonState==2) {
-                waypointMissionOperator.pauseMission(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        if (djiError == null) {
-                            myWayPointMissonState = 3;
-                            rebackMsg(9, "success", "call pauseMission() success now flight state is " + waypointMissionOperator.getCurrentState());
-                        } else {
-                            rebackMsg(9, "暂停航点飞行发送错误", "call pauseMission() error message is " + djiError.getDescription());
+            if(myWayPointMissonState ==2) {
+                if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState()) && myWayPointMissonState == 2) {
+                    waypointMissionOperator.pauseMission(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            if (djiError == null) {
+                                myWayPointMissonState = 3;
+                                rebackMsg(9, "success", "call pauseMission() success now flight state is " + waypointMissionOperator.getCurrentState());
+                            } else {
+                                rebackMsg(9, "暂停航点飞行发送错误", "call pauseMission() error message is " + djiError.getDescription());
+                            }
                         }
-                    }
-                });
-            } else if(myWayPointMissonState == 5){
-                myWayPointMissonState = 7;
-            } else{
-                rebackMsg(9, "飞机状态错误，不能执行暂停飞行方法", "call pauseMission() 无法执行暂停方法，飞机当前状态为" + waypointMissionOperator.getCurrentState());
+                    });
+                } else {
+                    rebackMsg(9, "飞机状态错误，不能执行暂停飞行方法", "call pauseMission() 无法执行暂停方法，飞机当前状态为" + waypointMissionOperator.getCurrentState());
+                }
+            }else if(myWayPointMissonState == 4){
+                myWayPointMissonState = 5;
             }
         }else{
             sendErrorMessage("飞机未连接，无法暂停航点飞行");
@@ -529,22 +535,22 @@ public class HFDManager {
     public void resumeMission(){
         FileUtils.writeLogFile(0, "call resumeMission() method.");
         if(flightController != null) {
-            if (WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())&&myWayPointMissonState==3) {
-                waypointMissionOperator.resumeMission(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        if (djiError == null) {
-                            myWayPointMissonState = 4;
-                            rebackMsg(10, "success", "call resumeMission() success now flight state is " + waypointMissionOperator.getCurrentState());
-                        } else {
-                            rebackMsg(10, "继续航点飞行发送错误", "call resumeMission() error message is " + djiError.getDescription());
+            if(myWayPointMissonState != 5) {
+                if (WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState()) && myWayPointMissonState == 3) {
+                    waypointMissionOperator.resumeMission(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            if (djiError == null) {
+                                myWayPointMissonState = 2;
+                                rebackMsg(10, "success", "call resumeMission() success now flight state is " + waypointMissionOperator.getCurrentState());
+                            } else {
+                                rebackMsg(10, "继续航点飞行发送错误，" + djiError.getDescription(), "call resumeMission() error message is " + djiError.getDescription());
+                            }
                         }
-                    }
-                });
-            } else if(myWayPointMissonState == 7){
-                myUploadMisson();
-            }else{
-                rebackMsg(10, "飞机状态错误，不能继续航点飞行", "call resumeMission() 无法执行继续飞行方法，飞机当前状态为" + waypointMissionOperator.getCurrentState());
+                    });
+                } else {
+                    rebackMsg(10, "飞机状态错误，不能继续航点飞行", "call resumeMission() 无法执行继续飞行方法，飞机当前状态为" + waypointMissionOperator.getCurrentState());
+                }
             }
         }else{
             sendErrorMessage("飞机未连接，无法继续航点飞行");
@@ -553,17 +559,11 @@ public class HFDManager {
     public void breakpointMission(){
         FileUtils.writeLogFile(0, "call breakpointMission() method.");
         if(flightController != null) {
-            if (realSeq <= backPointList.size()) {
-//                if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())) {
-//                    rebackMsg(11, "success", "call breakpointMission() success now flight state is " + waypointMissionOperator.getCurrentState());
-//                }
-                for(int i=realSeq;i<backPointList.size();i++){
-                    if(backPointList.get(i).getTowerNum().equals(realPoint.getTowerNum()))
-                        backPointList.get(i).setPointType(1);
-                }
+            if (realSeq < backPointList.size()) {
+                breakList.add(backPointList.get(realSeq).getTowerNum());
                 rebackMsg(11, "success", "call breakpointMission() success now flight state is " + waypointMissionOperator.getCurrentState());
             } else {
-                rebackMsg(11, "跳过杆塔失败，航线飞行已完成", "call breakpointMission() success now flight state is " + waypointMissionOperator.getCurrentState());
+                rebackMsg(11, "跳过杆塔失败，航线飞行即将完成", "call breakpointMission() success now flight state is " + waypointMissionOperator.getCurrentState());
             }
         }else{
             sendErrorMessage("飞机未连接，无法跳过当前杆塔进行航点飞行");
@@ -762,35 +762,47 @@ public class HFDManager {
                                             FileUtils.writeLogFile(2, "call getSDStorage() error is "+e.getMessage());
                                         }
                                     }else if ("17".equals(Integer.toHexString(data[5] & 0x0FF))) {
+                                        if(myWayPointMissonState == 4){
+                                            resumeMission();
+
+                                            realPoint = new TowerPoint();
+                                            realPoint = backPointList.get(realSeq);
+                                            //发送航点结束命令
+                                            object = new JSONObject();
+                                            try {
+                                                object.put("result ", "end");
+                                                object.put("tower ", realPoint.getTowerNum());
+                                                object.put("point ", realPoint.getId());
+                                            } catch (Exception e) {
+                                                object = null;
+                                            }
+                                            messServer.setInfomation((byte) 15, object);
+                                            FileUtils.writeLogFile(0, "end point "+realPoint.getTowerNum()+","+realPoint.getId());
+                                            //最后一个点
+                                            if(realSeq != backPointList.size()){
+                                                realPoint = new TowerPoint();
+                                                realPoint = backPointList.get(realSeq+1);
+                                                //发送航点开始命令
+                                                object = new JSONObject();
+                                                try {
+                                                    object.put("result ", "start");
+                                                    object.put("tower ", realPoint.getTowerNum());
+                                                    object.put("point ", realPoint.getId());
+                                                } catch (Exception e) {
+                                                    object = null;
+                                                }
+                                                messServer.setInfomation((byte) 15, object);
+                                                FileUtils.writeLogFile(0, "start point "+realPoint.getTowerNum()+","+realPoint.getId());
+                                            }
+
+                                        }
                                         //拍照执行完成
-                                        myWayPointMissonState = 6;
                                         if ("1".equals(Integer.toHexString(data[6] & 0x0FF))) {
                                             FileUtils.writeLogFile(1, "智能识别 未识别到有效数据");
                                         } else if ("2".equals(Integer.toHexString(data[6] & 0x0FF))) {
                                             FileUtils.writeLogFile(1, "智能识别 识别拍照中");
                                         } else if ("3".equals(Integer.toHexString(data[6] & 0x0FF))) {
                                             FileUtils.writeLogFile(1, "智能识别 识别拍照结束");
-                                        }
-                                        //发送航点结束命令
-                                        object = new JSONObject();
-                                        try {
-                                            object.put("result ", "end");
-                                            object.put("tower ", realPoint.getTowerNum());
-                                            object.put("point ", realPoint.getId());
-                                        } catch (Exception e) {
-                                            object = null;
-                                        }
-                                        messServer.setInfomation((byte) 15, object);
-                                        FileUtils.writeLogFile(0, "end point "+realPoint.getTowerNum()+","+realPoint.getId());
-
-                                        //任务完成
-                                        if(backPointList.size() == realSeq){
-                                            myWayPointMissonState = 0;
-                                            rebackMsg(12,"result","success");
-                                            FileUtils.writeLogFile(1, "自动巡检完成");
-                                        }else{
-                                            //load upload startmisson
-                                            myUploadMisson();
                                         }
                                     }
                                 }else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
@@ -1206,7 +1218,7 @@ public class HFDManager {
         return blurZoom;
     }
 
-    private WaypointMission createWaypointMission(int stayTime){
+    private WaypointMission createWaypointMission(){
         WaypointMission.Builder builder = new WaypointMission.Builder();
         builder.autoFlightSpeed(5f);
         builder.maxFlightSpeed(10f);
@@ -1222,12 +1234,16 @@ public class HFDManager {
         builder.repeatTimes(1);
 
         List<Waypoint> waypointList = new ArrayList<>();
-
-        Waypoint eachWaypoint = new Waypoint(realPoint.getLatitude(),realPoint.getLongitude(), realPoint.getAltitude());
-        if(realPoint.getPointType() != 1)
-            eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, (int)realPoint.getToward()));
-        eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, stayTime));
-        waypointList.add(eachWaypoint);
+        for(int i=0;i<backPointList.size();i++) {
+            Waypoint eachWaypoint = new Waypoint(backPointList.get(i).getLatitude(), backPointList.get(i).getLongitude(), backPointList.get(i).getAltitude());
+            if (backPointList.get(i).getPointType() != 1)
+                eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, (int) backPointList.get(i).getToward()));
+            if(backPointList.get(i).getPointType() == 4)
+                eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 3000));
+            else
+                eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 2000));
+            waypointList.add(eachWaypoint);
+        }
         builder.waypointList(waypointList).waypointCount(waypointList.size());
         //builder.addWaypoint(eachWaypoint);
         return builder.build();
@@ -1280,39 +1296,18 @@ public class HFDManager {
                                 + (waypointMissionExecutionEvent.getProgress() == null
                                 ? ""
                                 : waypointMissionExecutionEvent.getProgress().targetWaypointIndex));
-                updateWaypointMissionState();
-            }
+                realSeq = waypointMissionExecutionEvent.getProgress().targetWaypointIndex;
 
-            @Override
-            public void onExecutionStart() {
-                //ToastUtils.setResultToToast("Execution started!");
-                updateWaypointMissionState();
-            }
-
-            @Override
-            public void onExecutionFinish(@Nullable DJIError djiError) {
-
-                if(backPointList.size() == realSeq){
-
-                    try {
-                        object.put("result ", "end");
-                        object.put("tower ", realPoint.getTowerNum());
-                        object.put("point ", realPoint.getId());
-                    } catch (Exception e) {
-                        object = null;
-                    }
-                    messServer.setInfomation((byte) 15, object);
-                    FileUtils.writeLogFile(0, "end point "+realPoint.getTowerNum()+","+realPoint.getId());
-
-                    myWayPointMissonState = 0;
-                    rebackMsg(12,"result","success");
-                    FileUtils.writeLogFile(1, "Current Waypointmission state : "+ waypointMissionOperator.getCurrentState().getName());
-                }else{
-                    if(realPoint.getPointType()==4){
-                        //智能识别
-                        myWayPointMissonState = 5;
-                        createMAVLink(12,Integer.parseInt(realPoint.getTowerNumber().substring(1)));
+                if(waypointMissionExecutionEvent.getProgress().isWaypointReached)
+                    if(backPointList.get(realSeq).getPointType() == 4 && !breakList.contains(backPointList.get(realSeq).getTowerNumber())) {
+                        myWayPointMissonState = 4;
+                        //执行智能识别拍照
+                        createMAVLink(12,Integer.parseInt(backPointList.get(realSeq).getTowerNum().substring(1)));
                     }else{
+                        realPoint = new TowerPoint();
+                        realPoint = backPointList.get(realSeq);
+                        //发送航点结束命令
+                        object = new JSONObject();
                         try {
                             object.put("result ", "end");
                             object.put("tower ", realPoint.getTowerNum());
@@ -1322,10 +1317,51 @@ public class HFDManager {
                         }
                         messServer.setInfomation((byte) 15, object);
                         FileUtils.writeLogFile(0, "end point "+realPoint.getTowerNum()+","+realPoint.getId());
-                        //load upload startmisson
-                        myUploadMisson();
+                        //最后一个点
+                        if(realSeq != backPointList.size()){
+                            realPoint = new TowerPoint();
+                            realPoint = backPointList.get(realSeq+1);
+                            //发送航点开始命令
+                            object = new JSONObject();
+                            try {
+                                object.put("result ", "start");
+                                object.put("tower ", realPoint.getTowerNum());
+                                object.put("point ", realPoint.getId());
+                            } catch (Exception e) {
+                                object = null;
+                            }
+                            messServer.setInfomation((byte) 15, object);
+                            FileUtils.writeLogFile(0, "start point "+realPoint.getTowerNum()+","+realPoint.getId());
+                        }
                     }
+
+                realSeq = waypointMissionExecutionEvent.getProgress().targetWaypointIndex;
+                updateWaypointMissionState();
+            }
+
+            @Override
+            public void onExecutionStart() {
+                //ToastUtils.setResultToToast("Execution started!");
+                //发送航点开始命令
+                JSONObject object = new JSONObject();
+                try {
+                    object.put("result ", "start");
+                    object.put("tower ", realPoint.getTowerNum());
+                    object.put("point ", realPoint.getId());
+                } catch (Exception e) {
+                    object = null;
                 }
+                messServer.setInfomation((byte) 15, object);
+                FileUtils.writeLogFile(0, "start point "+realPoint.getTowerNum()+","+realPoint.getId());
+
+                updateWaypointMissionState();
+            }
+
+            @Override
+            public void onExecutionFinish(@Nullable DJIError djiError) {
+                myWayPointMissonState = 0;
+                rebackMsg(15,"success","ExecutionFinish");
+                FileUtils.writeLogFile(1, "Waypointmission finish");
 
                 updateWaypointMissionState();
             }
@@ -1344,77 +1380,6 @@ public class HFDManager {
         } else {
             Log.d("waypoint","null Current Waypointmission state : "+ waypointMissionOperator.getCurrentState().getName());
             FileUtils.writeLogFile(1, "null Current Waypointmission state : "+ waypointMissionOperator.getCurrentState().getName());
-        }
-    }
-
-    private void myUploadMisson(){
-        if(flightController != null) {
-            realPoint = new TowerPoint();
-            realPoint = backPointList.get(realSeq++);
-            if(realPoint.getPointType() ==4)
-                mission = createWaypointMission(1000);
-            else
-                mission = createWaypointMission(3000);
-            DJIError djiError = waypointMissionOperator.loadMission(mission);
-            if (djiError == null) {
-                FileUtils.writeLogFile(0, "start uploadPoint().");
-                if (WaypointMissionState.READY_TO_RETRY_UPLOAD.equals(waypointMissionOperator.getCurrentState())
-                        || WaypointMissionState.READY_TO_UPLOAD.equals(waypointMissionOperator.getCurrentState())) {
-                    waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                if (djiError == null) {
-                                    myStartMission();
-                                    FileUtils.writeLogFile(0, "myStartMisson uploadMission success");
-                                } else {
-                                    rebackMsg(7, "航点错误", "call myStartMisson() errorMsg is 上传航点到飞机失败---" + djiError.getDescription());
-                                }
-                            }
-                        });
-                    } else {
-                        rebackMsg(7, "飞机状态出现错误", "call myStartMisson() errorMsg is 飞机尚未准备就绪---" + djiError.getDescription());
-                    }
-                } else {
-                    rebackMsg(7, "航点"+realPoint.getId()+"出错，请检查航点信息", "call myStartMisson() errorMsg is 航点出错，请检查航点信息---" + djiError.getDescription());
-            }
-        }else{
-            sendErrorMessage("飞机未连接，无法进行航点飞行");
-        }
-    }
-
-    public void myStartMission(){
-        //flightController.startTakeoff();
-        FileUtils.writeLogFile(0, "call myStartMission() method.");
-        if(flightController != null) {
-            if (mission != null) {
-                if (WaypointMissionState.READY_TO_EXECUTE.equals(waypointMissionOperator.getCurrentState())&& myWayPointMissonState==1) {
-                    waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError == null) {
-                                myWayPointMissonState = 2;
-                                try {
-                                    object.put("result ", "start");
-                                    object.put("tower ", realPoint.getTowerNum());
-                                    object.put("point ", realPoint.getId());
-                                } catch (Exception e) {
-                                    object = null;
-                                }
-                                messServer.setInfomation((byte) 15, object);
-                                FileUtils.writeLogFile(0, "start point "+realPoint.getTowerNum()+","+realPoint.getId());
-                            } else {
-                                rebackMsg(8, "开始自动飞行失败", "call startMission() errormsg is " + djiError.getDescription());
-                            }
-                        }
-                    });
-                } else {
-                    rebackMsg(8, "飞行航线飞行状态不对，请重新规划上传航线", "call startMission() 飞行航线飞行状态不对，请重新规划上传航线");
-                }
-            } else {
-                rebackMsg(8, "航线任务为不能空，请上传航点", "call startMission() 航线任务为不能空，请上传航点");
-            }
-        }else{
-            sendErrorMessage("飞机未连接，已经无法进行航点飞行");
         }
     }
 }
