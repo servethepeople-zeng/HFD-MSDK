@@ -12,6 +12,7 @@ public class msg_picture_press extends MAVLinkMessage {
     //public byte capture;
     public float jingdu;
     public float weidu;
+    public byte towNum;
 
     public msg_picture_press(MAVLinkPacket mavLinkPacket) {
         this.compid = mavLinkPacket.compid;
@@ -30,6 +31,7 @@ public class msg_picture_press extends MAVLinkMessage {
         //packet.payload.putByte(capture);
         packet.payload.putFloat(jingdu);
         packet.payload.putFloat(weidu);
+        packet.payload.putByte(towNum);
         return packet;
     }
 
@@ -39,5 +41,6 @@ public class msg_picture_press extends MAVLinkMessage {
         //this.capture = payload.getByte();
         this.jingdu = payload.getFloat();
         this.weidu = payload.getFloat();
+        this.towNum = payload.getByte();
     }
 }

@@ -133,6 +133,7 @@ public class HFDManager {
     private LatLng liveLatLng = new LatLng(latLng.latitude, latLng.longitude);
     private int gcMode = 2,qZoom = 6,realSeq = 0;
     public static List<TowerPoint> backPointList = new ArrayList<TowerPoint>();
+    public static List<TowerPoint> tempTowerList = new ArrayList<TowerPoint>();
     public static List<String> breakList = new ArrayList<String>();
     private TowerPoint realPoint = new TowerPoint();
     private WaypointMission mission;
@@ -161,8 +162,13 @@ public class HFDManager {
 
     public static void main(String args[]){
         String a = "abcd";
-        System.out.println(a.length());
-        System.out.println(a.substring(1));
+        System.out.println(a);
+        for(int i =0;i<5;i++) {
+            String b = "abcde";
+            if(i==0)
+                a = b+i;
+        }
+        System.out.println(a);
         List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
         TowerPoint tower1 = new TowerPoint();
         tower1 = new TowerPoint();
@@ -201,22 +207,26 @@ public class HFDManager {
         towerLists.add(tower1);
         //loadTower(towerLists);
 
-
+        tempTowerList = towerLists;
+        System.out.println("航点个数="+towerLists.size());
         List<TowerPoint> mPointList = new ArrayList<TowerPoint>();
         mPointList = loadTower(towerLists);
+        tempTowerList = mPointList;
         System.out.println("航点个数="+mPointList.size());
-        System.out.println("航点号："+mPointList.get(0).getId()+",随机塔号="+mPointList.get(0).getTowerNum()+",塔号="+mPointList.get(0).getTowerNumber()+",塔类型="+mPointList.get(0).getTowerTypeName()+",高度="+mPointList.get(0).getAltitude()+",经度="+mPointList.get(0).getLongitude()+"，纬度="+mPointList.get(0).getLatitude());
-        System.out.println("航点号："+mPointList.get(1).getId()+",随机塔号="+mPointList.get(1).getTowerNum()+",塔号="+mPointList.get(1).getTowerNumber()+",塔类型="+mPointList.get(1).getTowerTypeName()+",高度="+mPointList.get(1).getAltitude()+",经度="+mPointList.get(1).getLongitude()+"，纬度="+mPointList.get(1).getLatitude());
-        String missionName ="12abcd";
-        byte[] buffer = new byte[5 + missionName.length()];
-        int i = 0;
-        buffer[i++] = (byte) 253;
-        buffer[i++] = (byte) missionName.length();
-        buffer[i++] = (byte) 20;
-        buffer[i++] = (byte) 255;
-        buffer[i++] = (byte) 190;
-        for(int j=i;j<5 + missionName.length();j++)
-            buffer[j] = (byte) (missionName.charAt(j-i) & 0xFF);
+        System.out.println("航点个数="+tempTowerList.size());
+//        System.out.println("航点个数="+mPointList.size());
+//        System.out.println("航点号："+mPointList.get(0).getId()+",随机塔号="+mPointList.get(0).getTowerNum()+",塔号="+mPointList.get(0).getTowerNumber()+",塔类型="+mPointList.get(0).getTowerTypeName()+",高度="+mPointList.get(0).getAltitude()+",经度="+mPointList.get(0).getLongitude()+"，纬度="+mPointList.get(0).getLatitude());
+//        System.out.println("航点号："+mPointList.get(1).getId()+",随机塔号="+mPointList.get(1).getTowerNum()+",塔号="+mPointList.get(1).getTowerNumber()+",塔类型="+mPointList.get(1).getTowerTypeName()+",高度="+mPointList.get(1).getAltitude()+",经度="+mPointList.get(1).getLongitude()+"，纬度="+mPointList.get(1).getLatitude());
+//        String missionName ="12abcd";
+//        byte[] buffer = new byte[5 + missionName.length()];
+//        int i = 0;
+//        buffer[i++] = (byte) 253;
+//        buffer[i++] = (byte) missionName.length();
+//        buffer[i++] = (byte) 20;
+//        buffer[i++] = (byte) 255;
+//        buffer[i++] = (byte) 190;
+//        for(int j=i;j<5 + missionName.length();j++)
+//            buffer[j] = (byte) (missionName.charAt(j-i) & 0xFF);
             //System.out.println();
 //            buffer[j++] = (byte)missionName.charAt(j-i);
 //
@@ -227,13 +237,26 @@ public class HFDManager {
 //                sbu.append((int)chars[i]).append(",");
 //            }
 //        }
-        System.out.println(BytesToHexString(buffer, buffer.length));
-        System.out.println(buffer[1] & 0x0FF);
+//        System.out.println(BytesToHexString(buffer, buffer.length));
+//        System.out.println(buffer[1] & 0x0FF);
 
     }
 
     public void takePhoto(){
-        createMAVLink(1,0);
+        if(tempTowerList.size()==0) {
+            createMAVLink(1, 0);
+        }else{
+            double fruthest = 0;
+            int targetTow = 0;
+            for(int i=0;i<tempTowerList.size();i++){
+                double newDis = Helper.getDistance(liveLatLng.latitude,liveLatLng.longitude,tempTowerList.get(i).getLatitude(),tempTowerList.get(i).getLongitude());
+                if(newDis>= fruthest) {
+                    targetTow = i;
+                    fruthest = newDis;
+                }
+            }
+            createMAVLink(1, Integer.parseInt(tempTowerList.get(targetTow).getTowerNumber().substring(1)));
+        }
         FileUtils.writeLogFile(0, "call takePhoto() method.");
     }
     public void takeRecord(int type){
@@ -401,6 +424,7 @@ public class HFDManager {
 
     public static List<TowerPoint> loadTower(List<TowerPoint> towerList){
         //FileUtils.writeLogFile(0, "call loadTower() method.");
+        tempTowerList = towerList;
         if(towerList.size() == 0){
             //sendErrorMessage("杆塔数据为空");
             return null;
@@ -475,32 +499,36 @@ public class HFDManager {
         //flightController.startTakeoff();
         FileUtils.writeLogFile(0, "call startMission() method.");
         if(flightController != null) {
-            if (mission != null) {
-                if (WaypointMissionState.READY_TO_EXECUTE.equals(waypointMissionOperator.getCurrentState())&& myWayPointMissonState==1) {
-                    waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if (djiError == null) {
-                                myWayPointMissonState = 2;
-                                try {
-                                    object.put("result ", "start");
-                                    object.put("tower ", realPoint.getTowerNum());
-                                    object.put("point ", realPoint.getId());
-                                } catch (Exception e) {
-                                    object = null;
+            if(!missonName.equals("")) {
+                if (mission != null) {
+                    if (WaypointMissionState.READY_TO_EXECUTE.equals(waypointMissionOperator.getCurrentState()) && myWayPointMissonState == 1) {
+                        waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
+                            @Override
+                            public void onResult(DJIError djiError) {
+                                if (djiError == null) {
+                                    myWayPointMissonState = 2;
+                                    try {
+                                        object.put("result ", "start");
+                                        object.put("tower ", realPoint.getTowerNum());
+                                        object.put("point ", realPoint.getId());
+                                    } catch (Exception e) {
+                                        object = null;
+                                    }
+                                    messServer.setInfomation((byte) 15, object);
+                                    FileUtils.writeLogFile(0, "start point " + realPoint.getTowerNum() + "," + realPoint.getId());
+                                } else {
+                                    rebackMsg(8, "开始自动飞行失败，" + djiError.getDescription(), "call startMission() errormsg is " + djiError.getDescription());
                                 }
-                                messServer.setInfomation((byte) 15, object);
-                                FileUtils.writeLogFile(0, "start point "+realPoint.getTowerNum()+","+realPoint.getId());
-                            } else {
-                                rebackMsg(8, "开始自动飞行失败，"+djiError.getDescription(), "call startMission() errormsg is " + djiError.getDescription());
                             }
-                        }
-                    });
-                }else{
-                    rebackMsg(8, "飞行航线飞行状态不对，请重新规划上传航线", "call startMission() 飞行航线飞行状态不对，请重新规划上传航线");
+                        });
+                    } else {
+                        rebackMsg(8, "飞行航线飞行状态不对，请重新规划上传航线", "call startMission() 飞行航线飞行状态不对，请重新规划上传航线");
+                    }
+                } else {
+                    rebackMsg(8, "航线任务为不能空，请上传航点", "call startMission() 航线任务为不能空，请上传航点");
                 }
-            } else {
-                rebackMsg(8, "航线任务为不能空，请上传航点", "call startMission() 航线任务为不能空，请上传航点");
+            }else{
+                rebackMsg(8, "航线任务名称未定义，请上传航线任务名称", "call startMission() 航线任务名称未定义，请上传航线任务名称");
             }
         }else{
             sendErrorMessage("飞机未连接，无法进行航点飞行");
@@ -873,7 +901,7 @@ public class HFDManager {
                 msg_picture_press pressPicture = new msg_picture_press(packet);
                 pressPicture.jingdu = (float) liveLatLng.longitude;
                 pressPicture.weidu = (float) liveLatLng.latitude;
-                //pressPicture.capture = 1;
+                pressPicture.towNum = (byte) content;
                 packet = pressPicture.pack();
                 packet.generateCRC();
                 byte[] bytepress = packet.encodePacket();
@@ -1302,7 +1330,7 @@ public class HFDManager {
                     if(backPointList.get(realSeq).getPointType() == 4 && !breakList.contains(backPointList.get(realSeq).getTowerNumber())) {
                         myWayPointMissonState = 4;
                         //执行智能识别拍照
-                        createMAVLink(12,Integer.parseInt(backPointList.get(realSeq).getTowerNum().substring(1)));
+                        createMAVLink(12,Integer.parseInt(backPointList.get(realSeq).getTowerNumber().substring(1)));
                     }else{
                         realPoint = new TowerPoint();
                         realPoint = backPointList.get(realSeq);
