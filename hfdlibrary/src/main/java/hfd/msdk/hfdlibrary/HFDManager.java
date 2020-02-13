@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import dji.common.battery.BatteryState;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightControllerState;
+import dji.common.flightcontroller.FlightWindWarning;
 import dji.common.mission.waypoint.Waypoint;
 import dji.common.mission.waypoint.WaypointAction;
 import dji.common.mission.waypoint.WaypointActionType;
@@ -144,6 +145,7 @@ public class HFDManager {
     private String missonName = "";
     //自定义航点飞行状态 0 等待飞行 执行停止操作或者未开始 READY_TO_UPLOAD. 1 READY_TO_EXECUTE uploadmisson 之后 2 executing startmission之后 已开始航点飞行 3 executtion_paused 暂停航点飞行 4 执行拍照操作中  5 识别中暂停
     private int myWayPointMissonState = 0;
+    private FlightControllerState mFControlState;
 
     public HFDManager(MessServer  messServer){
         //dji回调函数们
@@ -304,6 +306,29 @@ public class HFDManager {
             buffer[j] = (byte) (missionName.charAt(j-i) & 0xFF);
         sendUserData(buffer);
     }
+
+    public JSONObject getWindWarning(){
+        FileUtils.writeLogFile(0, "call getWindWarning() method.");
+        JSONObject dataObject = new JSONObject();
+        try {
+            if(flightController != null){
+                if(mFControlState == null){
+                    mFControlState = flightController.getState();
+                }
+                FlightWindWarning flightWindWarning = mFControlState.getFlightWindWarning();
+                dataObject.put("result", "success");
+                dataObject.put("alarmLevel", flightWindWarning.toString());
+            }else{
+                dataObject.put("result", "fail");
+            }
+
+        } catch (JSONException e) {
+            sendErrorMessage("程序异常");
+            FileUtils.writeLogFile(2, "call getWindWarning() error is "+e.getMessage());
+        }
+        return dataObject;
+    }
+
     public void returnCenter(){
         createMAVLink(11,0);
         FileUtils.writeLogFile(0, "call returnCenter() method.");
