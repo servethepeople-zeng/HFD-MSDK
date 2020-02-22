@@ -7,7 +7,7 @@ package hfd.msdk.mavlink;
 public class msg_picture_press extends MAVLinkMessage {
 
     public static final int MAVLINK_MSG_ID_PICTURE_PRESS = 6;
-    public static final int MAVLINK_MSG_LENGTH = 8;
+    public static final int MAVLINK_MSG_LENGTH = 9;
 
     //public byte capture;
     public float jingdu;

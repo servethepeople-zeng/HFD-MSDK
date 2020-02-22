@@ -163,59 +163,87 @@ public class HFDManager {
     }
 
     public static void main(String args[]){
-        String a = "abcd";
-        System.out.println(a);
-        for(int i =0;i<5;i++) {
-            String b = "abcde";
-            if(i==0)
-                a = b+i;
-        }
-        System.out.println(a);
+
+//        List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
+//        TowerPoint tower1 = new TowerPoint();
+//        tower1 = new TowerPoint();
+//        tower1.setAltitude(50f);
+//        tower1.setTowerNum("abcde");
+//        tower1.setTowerTypeName("zx");
+//        tower1.setTowerNumber("#4");
+//        tower1.setLatitude(36.0972);
+//        tower1.setLongitude(117.16058);
+//        towerLists.add(tower1);
+//
+//        tower1 = new TowerPoint();
+//        tower1.setAltitude(55.5f);
+//        tower1.setTowerNum("abcde");
+//        tower1.setTowerTypeName("zx");
+//        tower1.setTowerNumber("#3");
+//        tower1.setLatitude(36.10067);
+//        tower1.setLongitude(117.15577);
+//        towerLists.add(tower1);
+//
+//        tower1 = new TowerPoint();
+//        tower1.setAltitude(54.5f);
+//        tower1.setTowerNum("abcde");
+//        tower1.setTowerTypeName("nz");
+//        tower1.setTowerNumber("#2");
+//        tower1.setLatitude(36.10067);
+//        tower1.setLongitude(117.1522);
+//        towerLists.add(tower1);
+//
+//        tower1.setAltitude(53.5f);
+//        tower1.setTowerNum("abcd");
+//        tower1.setTowerTypeName("zx");
+//        tower1.setTowerNumber("#1");
+//        tower1.setLatitude(36.10194);
+//        tower1.setLongitude(117.14923);
+//        towerLists.add(tower1);
+
         List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
         TowerPoint tower1 = new TowerPoint();
         tower1 = new TowerPoint();
         tower1.setAltitude(50f);
-        tower1.setTowerNum("abcde");
+        tower1.setTowerNum("d06394fea15d4796b952787ae7a7ce2c");
         tower1.setTowerTypeName("zx");
-        tower1.setTowerNumber("#4");
-        tower1.setLatitude(36.0972);
-        tower1.setLongitude(117.16058);
+        tower1.setTowerNumber("#24");
+        tower1.setLatitude(36.68525);
+        tower1.setLongitude(117.131311);
         towerLists.add(tower1);
 
         tower1 = new TowerPoint();
-        tower1.setAltitude(55.5f);
-        tower1.setTowerNum("abcde");
-        tower1.setTowerTypeName("zx");
-        tower1.setTowerNumber("#3");
-        tower1.setLatitude(36.10067);
-        tower1.setLongitude(117.15577);
-        towerLists.add(tower1);
-
-        tower1 = new TowerPoint();
-        tower1.setAltitude(54.5f);
-        tower1.setTowerNum("abcde");
+        tower1.setAltitude(50f);
+        tower1.setTowerNum("bc4cda83568343dd9e63e35c5789d251");
         tower1.setTowerTypeName("nz");
-        tower1.setTowerNumber("#2");
-        tower1.setLatitude(36.10067);
-        tower1.setLongitude(117.1522);
+        tower1.setTowerNumber("#32");
+        tower1.setLatitude(36.68533);
+        tower1.setLongitude(117.13223);
         towerLists.add(tower1);
 
-        tower1.setAltitude(53.5f);
-        tower1.setTowerNum("abcd");
+        tower1 = new TowerPoint();
+        tower1.setAltitude(50f);
+        tower1.setTowerNum("bc4cda83568343dd9e63e35c5789d252");
         tower1.setTowerTypeName("zx");
-        tower1.setTowerNumber("#1");
-        tower1.setLatitude(36.10194);
-        tower1.setLongitude(117.14923);
+        tower1.setTowerNumber("#33");
+        tower1.setLatitude(36.684909);
+        tower1.setLongitude(117.132883);
         towerLists.add(tower1);
-        //loadTower(towerLists);
 
         tempTowerList = towerLists;
+        for(int i=0;i<tempTowerList.size();i++) {
+            System.out.println(towerLists.get(i).getLongitude()+"," + towerLists.get(i).getLatitude());
+        }
         System.out.println("航点个数="+towerLists.size());
         List<TowerPoint> mPointList = new ArrayList<TowerPoint>();
         mPointList = loadTower(towerLists);
-        tempTowerList = mPointList;
-        System.out.println("航点个数="+mPointList.size());
-        System.out.println("航点个数="+tempTowerList.size());
+        for(int i=0;i<mPointList.size();i++){
+            //System.out.println("航点号："+mPointList.get(i).getId()+",随机塔号="+mPointList.get(i).getTowerNum()+",塔号="+mPointList.get(i).getTowerNumber()+",塔类型="+mPointList.get(i).getTowerTypeName()+",高度="+mPointList.get(i).getAltitude()+",经度="+mPointList.get(i).getLongitude()+"，纬度="+mPointList.get(i).getLatitude());
+            System.out.println(mPointList.get(i).getLongitude()+"，"+mPointList.get(i).getLatitude());
+        }
+//        tempTowerList = mPointList;
+//        System.out.println("航点个数="+mPointList.size());
+//        System.out.println("航点个数="+tempTowerList.size());
 //        System.out.println("航点个数="+mPointList.size());
 //        System.out.println("航点号："+mPointList.get(0).getId()+",随机塔号="+mPointList.get(0).getTowerNum()+",塔号="+mPointList.get(0).getTowerNumber()+",塔类型="+mPointList.get(0).getTowerTypeName()+",高度="+mPointList.get(0).getAltitude()+",经度="+mPointList.get(0).getLongitude()+"，纬度="+mPointList.get(0).getLatitude());
 //        System.out.println("航点号："+mPointList.get(1).getId()+",随机塔号="+mPointList.get(1).getTowerNum()+",塔号="+mPointList.get(1).getTowerNumber()+",塔类型="+mPointList.get(1).getTowerTypeName()+",高度="+mPointList.get(1).getAltitude()+",经度="+mPointList.get(1).getLongitude()+"，纬度="+mPointList.get(1).getLatitude());
@@ -809,7 +837,7 @@ public class HFDManager {
                                         mStorage |= (data[10] & 0xFF) << 24;
                                         try {
                                             dataObject.put("totalStorage", (data[6] & 0x0FF)+"G");
-                                            dataObject.put("usedStorage", mStorage+"M");
+                                            dataObject.put("remainStorage", mStorage+"M");
                                         } catch (JSONException e) {
                                             sendErrorMessage("程序异常");
                                             FileUtils.writeLogFile(2, "call getSDStorage() error is "+e.getMessage());

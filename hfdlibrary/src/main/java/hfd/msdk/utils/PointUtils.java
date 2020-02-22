@@ -155,6 +155,7 @@ public class PointUtils {
                         firPoint.setPointType(4);
                         backPointList.add(firPoint);
                         //第三个点
+                        firPoint = new TowerPoint();
                         myPoint = GetPoint(towerList.get(1).getLatitude(), towerList.get(1).getLongitude(), TowDistance, TowHor==0?-45:45);
                         firPoint.setId(backPointList.size() + 1);
                         firPoint.setTowerNum(towerList.get(1).getTowerNum());
@@ -270,6 +271,7 @@ public class PointUtils {
                         firPoint.setPointType(4);
                         backPointList.add(firPoint);
                         //第二个点
+                        firPoint = new TowerPoint();
                         myPoint = GetPoint(towerList.get(1).getLatitude(), towerList.get(1).getLongitude(), TowDistance, TowHor==0?-45:45);
                         firPoint.setId(backPointList.size() + 1);
                         firPoint.setTowerNum(towerList.get(1).getTowerNum());
@@ -295,6 +297,7 @@ public class PointUtils {
                         firPoint.setPointType(4);
                         backPointList.add(firPoint);
                         //第四个点
+                        firPoint = new TowerPoint();
                         myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowHor==0?-45:45);
                         firPoint.setId(backPointList.size() + 1);
                         firPoint.setTowerNum(towerList.get(0).getTowerNum());
@@ -409,6 +412,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第二个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==0?myAngle-45:myAngle+45);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(0).getTowerNum());
@@ -421,6 +425,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第三个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(1).getLatitude(), towerList.get(1).getLongitude(), TowDistance, TowVer==0?myAngle-135:myAngle+135);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(1).getTowerNum());
@@ -433,6 +438,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第四个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(1).getLatitude(), towerList.get(1).getLongitude(), TowDistance, TowVer==0?myAngle-45:myAngle+45);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(1).getTowerNum());
@@ -445,6 +451,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第五个点
+                    firPoint = new TowerPoint();
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(1).getTowerNum());
                     firPoint.setTowerNumber(towerList.get(1).getTowerNumber());
@@ -456,6 +463,7 @@ public class PointUtils {
                     firPoint.setPointType(2);
                     backPointList.add(firPoint);
                     //第六个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(1).getLatitude(), towerList.get(1).getLongitude(), TowDistance, TowVer==0?myAngle+45:myAngle-45);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(1).getTowerNum());
@@ -468,6 +476,7 @@ public class PointUtils {
                     firPoint.setPointType(2);
                     backPointList.add(firPoint);
                     //第七个点
+                    firPoint = new TowerPoint();
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(1).getTowerNum());
                     firPoint.setTowerNumber(towerList.get(1).getTowerNumber());
@@ -479,6 +488,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第八个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(1).getLatitude(), towerList.get(1).getLongitude(), TowDistance, TowVer==0?myAngle+135:myAngle-135);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(1).getTowerNum());
@@ -491,6 +501,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第九个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==0?myAngle+45:myAngle-45);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(0).getTowerNum());
@@ -503,6 +514,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第十个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==0?myAngle+135:myAngle-135);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(0).getTowerNum());
@@ -528,6 +540,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第二个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(1).getLatitude(), towerList.get(1).getLongitude(), TowDistance, TowVer==0?myAngle-135:myAngle+135);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(1).getTowerNum());
@@ -540,6 +553,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第三个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==0?myAngle-45:myAngle+45);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(0).getTowerNum());
@@ -552,6 +566,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第四个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==0?myAngle-135:myAngle+135);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(0).getTowerNum());
@@ -564,6 +579,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第五个点
+                    firPoint = new TowerPoint();
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(0).getTowerNum());
                     firPoint.setTowerNumber(towerList.get(0).getTowerNumber());
@@ -575,6 +591,7 @@ public class PointUtils {
                     firPoint.setPointType(2);
                     backPointList.add(firPoint);
                     //第六个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==0?myAngle+135:myAngle-135);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(0).getTowerNum());
@@ -587,6 +604,7 @@ public class PointUtils {
                     firPoint.setPointType(2);
                     backPointList.add(firPoint);
                     //第七个点
+                    firPoint = new TowerPoint();
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(0).getTowerNum());
                     firPoint.setTowerNumber(towerList.get(0).getTowerNumber());
@@ -598,6 +616,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第八个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(0).getLatitude(), towerList.get(0).getLongitude(), TowDistance, TowVer==0?myAngle+45:myAngle-45);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(0).getTowerNum());
@@ -610,6 +629,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第九个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(1).getLatitude(), towerList.get(1).getLongitude(), TowDistance, TowVer==0?myAngle+135:myAngle-135);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(1).getTowerNum());
@@ -622,6 +642,7 @@ public class PointUtils {
                     firPoint.setPointType(4);
                     backPointList.add(firPoint);
                     //第十个点
+                    firPoint = new TowerPoint();
                     myPoint = GetPoint(towerList.get(1).getLatitude(), towerList.get(1).getLongitude(), TowDistance, TowVer==0?myAngle+45:myAngle-45);
                     firPoint.setId(backPointList.size() + 1);
                     firPoint.setTowerNum(towerList.get(1).getTowerNum());
@@ -721,6 +742,7 @@ public class PointUtils {
         firPoint.setPointType(4);
         backPointList.add(firPoint);
         //第二个点
+        firPoint = new TowerPoint();
         myPoint = GetPoint(lastOne.getLatitude(), lastOne.getLongitude(), TowDistance, TowVer==0?myAngle-45:myAngle+45);
         firPoint = new TowerPoint();
         firPoint.setId(backPointList.size() + 1);
@@ -746,6 +768,7 @@ public class PointUtils {
         firPoint.setPointType(2);
         backPointList.add(firPoint);
         //第四个点
+        firPoint = new TowerPoint();
         myPoint = GetPoint(lastOne.getLatitude(), lastOne.getLongitude(), TowDistance, TowVer==0?myAngle+45:myAngle-45);
         firPoint = new TowerPoint();
         firPoint.setId(backPointList.size() + 1);
@@ -771,6 +794,7 @@ public class PointUtils {
         firPoint.setPointType(4);
         backPointList.add(firPoint);
         //第六个点
+        firPoint = new TowerPoint();
         myPoint = GetPoint(lastOne.getLatitude(), lastOne.getLongitude(), TowDistance, TowVer==0?myAngle+135:myAngle-135);
         firPoint = new TowerPoint();
         firPoint.setId(backPointList.size() + 1);
@@ -801,6 +825,7 @@ public class PointUtils {
         firPoint.setPointType(4);
         backPointList.add(firPoint);
         //第二个点
+        firPoint = new TowerPoint();
         myPoint = GetPoint(lastOne.getLatitude(), lastOne.getLongitude(), TowDistance, TowVer==0?myAngle-135:myAngle+135);
         firPoint = new TowerPoint();
         firPoint.setId(backPointList.size() + 1);
@@ -1038,11 +1063,12 @@ public class PointUtils {
     public static void nzTowerPoint(TowerPoint prePoint,TowerPoint currPoint,TowerPoint nextPoint){
         double myAngle = myGetAngel(currPoint.getLatitude(), currPoint.getLongitude(),prePoint.getLatitude(), prePoint.getLongitude());
         double myAngle1 = myGetAngel(currPoint.getLatitude(), currPoint.getLongitude(),nextPoint.getLatitude(), nextPoint.getLongitude());
+        System.out.println(myAngle+","+myAngle1);
         TowerPoint firPoint = new TowerPoint();
         if((myAngle-myAngle1)<180){
             //第一个点
             double fAngel = myAngle1 - (360 - (myAngle - myAngle1)) / 2 - 45;
-            Point myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            Point myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint.setId(backPointList.size() + 1);
             firPoint.setTowerNum(currPoint.getTowerNum());
             firPoint.setTowerNumber(currPoint.getTowerNumber());
@@ -1062,7 +1088,7 @@ public class PointUtils {
                 backTempPointList.add(firPoint);
             //第二个点
             fAngel = myAngle1 - (360 - (myAngle - myAngle1)) / 2 + 45;
-            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint = new TowerPoint();
             firPoint.setId(backPointList.size() + 1);
             firPoint.setTowerNum(currPoint.getTowerNum());
@@ -1084,7 +1110,7 @@ public class PointUtils {
 
             //倒数第一个点
             fAngel = myAngle1 + (myAngle - myAngle1) / 2;
-            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint = new TowerPoint();
             firPoint.setTowerNum(currPoint.getTowerNum());
             firPoint.setTowerNumber(currPoint.getTowerNumber());
@@ -1101,7 +1127,7 @@ public class PointUtils {
         }else{
             //第一个点
             double fAngel = myAngle1-(360-(myAngle-myAngle1))/2;
-            Point myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            Point myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint.setTowerNum(currPoint.getTowerNum());
             firPoint.setTowerNumber(currPoint.getTowerNumber());
             firPoint.setTowerTypeName(currPoint.getTowerTypeName());
@@ -1118,8 +1144,8 @@ public class PointUtils {
             else
                 backTempPointList.add(firPoint);
             //倒数第一个点
-            fAngel = myAngle+(myAngle-myAngle1)/2+45;
-            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            fAngel = myAngle+(myAngle1-myAngle)/2+45;
+            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint = new TowerPoint();
             firPoint.setTowerNum(currPoint.getTowerNum());
             firPoint.setTowerNumber(currPoint.getTowerNumber());
@@ -1137,8 +1163,8 @@ public class PointUtils {
             else
                 backPointList.add(firPoint);
             //倒数第二个点
-            fAngel = myAngle+(myAngle-myAngle1)/2-45;
-            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            fAngel = myAngle+(myAngle1-myAngle)/2-45;
+            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint = new TowerPoint();
             firPoint.setTowerNum(currPoint.getTowerNum());
             firPoint.setTowerNumber(currPoint.getTowerNumber());
@@ -1165,7 +1191,7 @@ public class PointUtils {
         if((myAngle-myAngle1)<180){
             //第一个点
             double fAngel = myAngle1 - (360 - (myAngle - myAngle1)) / 2 + 45;
-            Point myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            Point myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint.setId(backPointList.size() + 1);
             firPoint.setTowerNum(currPoint.getTowerNum());
             firPoint.setTowerNumber(currPoint.getTowerNumber());
@@ -1185,7 +1211,7 @@ public class PointUtils {
                 backTempPointList.add(firPoint);
             //第二个点
             fAngel = myAngle1 - (360 - (myAngle - myAngle1)) / 2 - 45;
-            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint = new TowerPoint();
             firPoint.setId(backPointList.size() + 1);
             firPoint.setTowerNum(currPoint.getTowerNum());
@@ -1207,7 +1233,7 @@ public class PointUtils {
 
             //倒数第一个点
             fAngel = myAngle1 + (myAngle - myAngle1) / 2;
-            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint = new TowerPoint();
             firPoint.setTowerNum(currPoint.getTowerNum());
             firPoint.setTowerNumber(currPoint.getTowerNumber());
@@ -1224,7 +1250,7 @@ public class PointUtils {
         }else{
             //第一个点
             double fAngel = myAngle1-(360-(myAngle-myAngle1))/2;
-            Point myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            Point myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint.setTowerNum(currPoint.getTowerNum());
             firPoint.setTowerNumber(currPoint.getTowerNumber());
             firPoint.setTowerTypeName(currPoint.getTowerTypeName());
@@ -1243,7 +1269,7 @@ public class PointUtils {
 
             //倒数第一个点
             fAngel = myAngle+(myAngle-myAngle1)/2-45;
-            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint = new TowerPoint();
             firPoint.setTowerNum(currPoint.getTowerNum());
             firPoint.setTowerNumber(currPoint.getTowerNumber());
@@ -1262,7 +1288,7 @@ public class PointUtils {
                 backPointList.add(firPoint);
             //倒数第二个点
             fAngel = myAngle+(myAngle-myAngle1)/2+45;
-            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), 0.03, fAngel);
+            myPoint = GetPoint(currPoint.getLatitude(), currPoint.getLongitude(), TowDistance, fAngel);
             firPoint = new TowerPoint();
             firPoint.setTowerNum(currPoint.getTowerNum());
             firPoint.setTowerNumber(currPoint.getTowerNumber());
