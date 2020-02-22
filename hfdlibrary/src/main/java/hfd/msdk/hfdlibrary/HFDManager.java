@@ -844,6 +844,7 @@ public class HFDManager {
                                             sendErrorMessage("程序异常");
                                             FileUtils.writeLogFile(2, "call getSDStorage() error is "+e.getMessage());
                                         }
+                                        messServer.setInfomation((byte) 2, dataObject);
                                     }else if ("17".equals(Integer.toHexString(data[5] & 0x0FF))) {
                                         if(myWayPointMissonState == 4){
                                             resumeMission();
@@ -893,7 +894,7 @@ public class HFDManager {
                                 }else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
                                     //反馈命令处理 以下表示拍照完成
                                     if ("6".equals(Integer.toHexString(data[5] & 0x0FF))) {
-                                        rebackMsg(1,"result","takephoto success");
+                                        rebackMsg(1,"success","takephoto success");
                                     }
                                 }
                             }
