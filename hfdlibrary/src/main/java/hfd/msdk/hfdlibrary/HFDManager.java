@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -53,6 +54,7 @@ import hfd.msdk.mavlink.msg_picture_press;
 import hfd.msdk.mavlink.msg_picture_zoom;
 import hfd.msdk.mavlink.msg_radio_end;
 import hfd.msdk.mavlink.msg_radio_start;
+import hfd.msdk.mavlink.msg_time_calibration;
 import hfd.msdk.model.TowerPoint;
 import hfd.msdk.utils.FileUtils;
 import hfd.msdk.utils.Helper;
@@ -885,6 +887,8 @@ public class HFDManager {
                                         } else if ("3".equals(Integer.toHexString(data[6] & 0x0FF))) {
                                             FileUtils.writeLogFile(1, "智能识别 识别拍照结束");
                                         }
+                                    }else if("66".equals(Integer.toHexString(data[5] & 0x0FF))){
+                                        createMAVLink(13, 0);
                                     }
                                 }else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
                                     //反馈命令处理 以下表示拍照完成
@@ -1051,6 +1055,28 @@ public class HFDManager {
                 packet = autoTakepic.pack();
                 packet.generateCRC();
                 sendUserData(packet.encodePacket());
+                break;
+            //发送时间校准信息
+            case 13:
+                msg_time_calibration calibration = new msg_time_calibration(packet);
+                int calYear = 0, calMonth = 0, calDay = 0, calHour = 0, calMinute = 0, calSecond = 0;
+                Calendar cal = Calendar.getInstance();
+                calYear = cal.get(Calendar.YEAR);
+                calMonth = cal.get(Calendar.MONTH);
+                calDay = cal.get(Calendar.DATE);
+                calHour = cal.get(Calendar.HOUR_OF_DAY);
+                calMinute = cal.get(Calendar.MINUTE);
+                calSecond = cal.get(Calendar.SECOND);
+                calibration.c_year = calYear;
+                calibration.c_month = (byte)calMonth;
+                calibration.c_day = (byte)calDay;
+                calibration.c_hour = (byte)calHour;
+                calibration.c_minute = (byte)calMinute;
+                calibration.c_second = (byte)calSecond;
+                packet = calibration.pack();
+                packet.generateCRC();
+                byte[] calibrationByte = packet.encodePacket();
+                sendUserData(calibrationByte);
                 break;
         }
     }
