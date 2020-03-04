@@ -224,9 +224,6 @@ public class HFDManager {
             //System.out.println("航点号："+mPointList.get(i).getId()+",随机塔号="+mPointList.get(i).getTowerNum()+",塔号="+mPointList.get(i).getTowerNumber()+",塔类型="+mPointList.get(i).getTowerTypeName()+",高度="+mPointList.get(i).getAltitude()+",经度="+mPointList.get(i).getLongitude()+"，纬度="+mPointList.get(i).getLatitude());
             System.out.println(mPointList.get(i).getLongitude()+"，"+mPointList.get(i).getLatitude());
         }
-        WaypointMission mmission = createWaypointMission1(mPointList);
-        WaypointMissionOperator waypointMissionOperator1 = MissionControl.getInstance().getWaypointMissionOperator();;
-        DJIError djiError = waypointMissionOperator1.loadMission(mmission);
 
 //        tempTowerList = mPointList;
 //        System.out.println("航点个数="+mPointList.size());
@@ -256,37 +253,6 @@ public class HFDManager {
 //        }
 //        System.out.println(BytesToHexString(buffer, buffer.length));
 //        System.out.println(buffer[1] & 0x0FF);
-    }
-
-    private static WaypointMission createWaypointMission1(List<TowerPoint> pList){
-        WaypointMission.Builder builder = new WaypointMission.Builder();
-        builder.autoFlightSpeed(5f);
-        builder.maxFlightSpeed(10f);
-        //当飞机跟遥控器失去连接的时候是否停止航点飞行
-        builder.setExitMissionOnRCSignalLostEnabled(false);
-        builder.finishedAction(WaypointMissionFinishedAction.NO_ACTION);
-        //normal 直线飞行 curved 圆弧飞行
-        builder.flightPathMode(WaypointMissionFlightPathMode.NORMAL);
-        //飞往第一个航点的飞行方式 safely 飞到跟第一个航点一样高后再飞 POINT_TO_POINT 直接从当前地方飞到第一个航点
-        builder.gotoFirstWaypointMode(WaypointMissionGotoWaypointMode.SAFELY);
-        //以机头为正方向
-        builder.headingMode(WaypointMissionHeadingMode.AUTO);
-        builder.repeatTimes(1);
-
-        List<Waypoint> waypointList = new ArrayList<>();
-        for(int i=0;i<pList.size();i++) {
-            Waypoint eachWaypoint = new Waypoint(pList.get(i).getLatitude(), pList.get(i).getLongitude(), pList.get(i).getAltitude());
-            if (pList.get(i).getPointType() != 1)
-                eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, (int) pList.get(i).getToward()));
-            if(pList.get(i).getPointType() == 4)
-                eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 3000));
-            else
-                eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 2000));
-            waypointList.add(eachWaypoint);
-        }
-        builder.waypointList(waypointList).waypointCount(waypointList.size());
-        //builder.addWaypoint(eachWaypoint);
-        return builder.build();
     }
 
     public void takePhoto(){
@@ -1359,12 +1325,10 @@ public class HFDManager {
         List<Waypoint> waypointList = new ArrayList<>();
         for(int i=0;i<backPointList.size();i++) {
             Waypoint eachWaypoint = new Waypoint(backPointList.get(i).getLatitude(), backPointList.get(i).getLongitude(), backPointList.get(i).getAltitude());
-            if (backPointList.get(i).getPointType() != 1)
-                eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, 10));
-            if(backPointList.get(i).getPointType() == 4)
-                eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 3000));
-            else
-                eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 2000));
+            eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, (int) backPointList.get(i).getToward()));
+
+            eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 3000));
+
             waypointList.add(eachWaypoint);
         }
         builder.waypointList(waypointList).waypointCount(waypointList.size());
