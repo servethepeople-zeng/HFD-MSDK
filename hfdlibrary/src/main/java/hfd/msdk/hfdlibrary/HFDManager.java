@@ -1325,10 +1325,12 @@ public class HFDManager {
         List<Waypoint> waypointList = new ArrayList<>();
         for(int i=0;i<backPointList.size();i++) {
             Waypoint eachWaypoint = new Waypoint(backPointList.get(i).getLatitude(), backPointList.get(i).getLongitude(), backPointList.get(i).getAltitude());
-            eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, (int) backPointList.get(i).getToward()));
-
-            eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 3000));
-
+//            if (backPointList.get(i).getPointType() != 1)
+//                eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, (int) backPointList.get(i).getToward()));
+            if(backPointList.get(i).getPointType() == 4)
+                eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 3000));
+            else
+                eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 2000));
             waypointList.add(eachWaypoint);
         }
         builder.waypointList(waypointList).waypointCount(waypointList.size());
