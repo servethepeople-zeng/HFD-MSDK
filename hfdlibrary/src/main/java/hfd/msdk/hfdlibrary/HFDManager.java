@@ -376,7 +376,9 @@ public class HFDManager {
     }
 
     public void uploadNewPoint(List<TowerPoint> towerList){
+        for(int i=0;i<towerList.size();i++){
 
+        }
     }
 
     public void uploadPoint(List<TowerPoint> towerList){
