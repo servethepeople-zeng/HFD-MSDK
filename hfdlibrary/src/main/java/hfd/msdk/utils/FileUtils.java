@@ -3,14 +3,26 @@ package hfd.msdk.utils;
 import android.os.Environment;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import hfd.msdk.hfdlibrary.HFDManager;
+import hfd.msdk.model.TowerPoint;
+import hfd.msdk.model.WayPoint;
 
 import static hfd.msdk.hfdlibrary.HFDManager.logLevelType;
+import static hfd.msdk.hfdlibrary.HFDManager.sendErrorMessage;
 
 /**
  * Created by Arvin zeng on 19/12/20
@@ -123,5 +135,58 @@ public class FileUtils {
                 }
             }
         }
+    }
+
+    /**
+     * 加载xml文件
+     * /mnt/internal_sd/HFD/8#.xml
+     * @param towerList
+     * @return List<WayPoint>
+     */
+    public static List<WayPoint> loadXml(List<TowerPoint> towerList){
+        List<WayPoint> listMarkPoint = new ArrayList<WayPoint>();
+        List<WayPoint> tempMarkPoint = new ArrayList<WayPoint>();
+        List<WayPoint> tempMarkPoint1 = new ArrayList<WayPoint>();
+        for(int i=0;i<towerList.size();i++) {
+            tempMarkPoint.clear();
+            try {
+                File file = new File("/mnt/internal_sd/HFD/"+towerList.get(i).getTowerNum()+".xml");
+                InputStream inputStream = new FileInputStream(file);
+                SAXParserFactory spf = SAXParserFactory.newInstance();
+                SAXParser saxParser = spf.newSAXParser();
+                MySaxHandler handler = new MySaxHandler();
+                saxParser.parse(inputStream, handler);
+                inputStream.close();
+                tempMarkPoint = handler.getTowerPoints();
+            } catch (Exception e) {
+                e.printStackTrace();
+                listMarkPoint.clear();
+                sendErrorMessage("航点文件错误");
+                break;
+            }
+
+            Collections.sort(tempMarkPoint, new Comparator<WayPoint>() {
+                @Override
+                public int compare(WayPoint o1, WayPoint o2) {
+                    int i = o1.getSeqNumber() - o2.getSeqNumber();
+                    return i;
+                }
+            });
+            for(int j=0;j<tempMarkPoint.size();j++){
+                if(tempMarkPoint.get(i).getSide() == 1)
+                    listMarkPoint.add(tempMarkPoint.get(j));
+                else
+                    break;
+            }
+            for(int k=tempMarkPoint.size()-1;k>-1;k--){
+                if(tempMarkPoint.get(i).getSide() == 2)
+                    tempMarkPoint1.add(tempMarkPoint.get(k));
+                else
+                    break;
+            }
+        }
+        for(int l=0;l<tempMarkPoint1.size();l++)
+            listMarkPoint.add(tempMarkPoint1.get(l));
+        return listMarkPoint;
     }
 }

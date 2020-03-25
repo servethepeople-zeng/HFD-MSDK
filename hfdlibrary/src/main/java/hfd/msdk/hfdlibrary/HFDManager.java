@@ -12,10 +12,13 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import dji.common.battery.BatteryState;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightControllerState;
+import dji.common.flightcontroller.FlightWindWarning;
 import dji.common.mission.waypoint.Waypoint;
 import dji.common.mission.waypoint.WaypointAction;
 import dji.common.mission.waypoint.WaypointActionType;
@@ -41,13 +44,17 @@ import hfd.msdk.mavlink.msg_GC_mode;
 import hfd.msdk.mavlink.msg_YT_degree;
 import hfd.msdk.mavlink.msg_YT_reset;
 import hfd.msdk.mavlink.msg_YT_sdegree;
+import hfd.msdk.mavlink.msg_camera_auto_takepic;
 import hfd.msdk.mavlink.msg_camera_zoom;
 import hfd.msdk.mavlink.msg_get_storage;
 import hfd.msdk.mavlink.msg_picture_press;
 import hfd.msdk.mavlink.msg_picture_zoom;
 import hfd.msdk.mavlink.msg_radio_end;
 import hfd.msdk.mavlink.msg_radio_start;
+import hfd.msdk.mavlink.msg_waypoint_power_fail;
+import hfd.msdk.mavlink.msg_waypoint_upload;
 import hfd.msdk.model.TowerPoint;
+import hfd.msdk.model.WayPoint;
 import hfd.msdk.utils.FileUtils;
 import hfd.msdk.utils.Helper;
 import hfd.msdk.utils.ToastUtils;
@@ -119,11 +126,11 @@ public class HFDManager {
     private static final String TAG = HFDManager.class.getSimpleName()+"1";
     //获取飞机
     private Aircraft aircraft = null;
-    private FlightController flightController;
+    public static FlightController flightController;
     private static DJIKey getDataKey, sendDataKey;
     private CommonCallbacks.CompletionCallbackWith  mDJICompletionCallbackc;
-    private int getHomeFlag = 0;
-    private static MessServer  messServer;
+    private int getHomeFlag = 0, pointNum = 0;
+    public static MessServer  messServer;
     private static JSONObject object;
     public static int logLevelType = 0;
     private LatLng liveLatLng = new LatLng(latLng.latitude, latLng.longitude);
@@ -136,6 +143,10 @@ public class HFDManager {
     private float currentAltidude = 0,compassData = 0;
     private int battery1 = 0, battery2 = 0;
     private String missonName = "";
+    public List<WayPoint> wayPointList;
+    private Timer timer;
+    public static FlightControllerState mFControlState;
+
 
     public HFDManager(MessServer  messServer){
         //dji回调函数们
@@ -146,53 +157,63 @@ public class HFDManager {
         object = new JSONObject();
         FileUtils.initLogFile();
         FileUtils.writeLogFile(0, "HFDManager init success.");
+        timer = new Timer();
+        WarningTimerTask warningTimerTask = new WarningTimerTask();
+        timer.schedule(warningTimerTask,60000,60000);
     }
 
     public static void main(String args[]){
-        List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
-        TowerPoint tower1 = new TowerPoint();
-        tower1 = new TowerPoint();
-        tower1.setAltitude(56.5f);
-        tower1.setTowerNum("abcde");
-        tower1.setTowerTypeName("zx");
-        tower1.setTowerNumber("#4");
-        tower1.setLatitude(36.0972);
-        tower1.setLongitude(117.16058);
-        towerLists.add(tower1);
+//        List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
+//        TowerPoint tower1 = new TowerPoint();
+//        tower1 = new TowerPoint();
+//        tower1.setAltitude(56.5f);
+//        tower1.setTowerNum("#1");
+//        tower1.setTowerTypeName("zx");
+//        tower1.setTowerNumber("#4");
+//        tower1.setLatitude(36.0972f);
+//        tower1.setLongitude(117.16058f);
+//        towerLists.add(tower1);
+//
+//        tower1 = new TowerPoint();
+//        tower1.setAltitude(55.5f);
+//        tower1.setTowerNum("#2");
+//        tower1.setTowerTypeName("zx");
+//        tower1.setTowerNumber("#3");
+//        tower1.setLatitude(36.10067f);
+//        tower1.setLongitude(117.15577f);
+//        towerLists.add(tower1);
+//
+//        tower1 = new TowerPoint();
+//        tower1.setAltitude(54.5f);
+//        tower1.setTowerNum("#3");
+//        tower1.setTowerTypeName("nz");
+//        tower1.setTowerNumber("#2");
+//        tower1.setLatitude(36.10067f);
+//        tower1.setLongitude(117.1522f);
+//        towerLists.add(tower1);
+//
+//        tower1.setAltitude(53.5f);
+//        tower1.setTowerNum("#4");
+//        tower1.setTowerTypeName("zx");
+//        tower1.setTowerNumber("#1");
+//        tower1.setLatitude(36.10194f);
+//        tower1.setLongitude(117.14923f);
+//        towerLists.add(tower1);
+//        //loadTower(towerLists);
+//
+//
+//        List<TowerPoint> mPointList = new ArrayList<TowerPoint>();
+//        mPointList = loadTower(towerLists);
+//        System.out.println("航点个数="+mPointList.size());
+//        System.out.println("航点号："+mPointList.get(0).getId()+",随机塔号="+mPointList.get(0).getTowerNum()+",塔号="+mPointList.get(0).getTowerNumber()+",塔类型="+mPointList.get(0).getTowerTypeName()+",高度="+mPointList.get(0).getAltitude()+",经度="+mPointList.get(0).getLongitude()+"，纬度="+mPointList.get(0).getLatitude());
+//        System.out.println("航点号："+mPointList.get(1).getId()+",随机塔号="+mPointList.get(1).getTowerNum()+",塔号="+mPointList.get(1).getTowerNumber()+",塔类型="+mPointList.get(1).getTowerTypeName()+",高度="+mPointList.get(1).getAltitude()+",经度="+mPointList.get(1).getLongitude()+"，纬度="+mPointList.get(1).getLatitude());
+//        System.out.println(getDistance(36.686488686,117.12664155,36.686496016,117.126449634));
+//        System.out.println(getDistance(36.686488686,117.12664155,36.68648727,117.12664053));
+//        System.out.println(getDistance(36.686511779,117.12646928,36.68650194,117.12666014));
 
-        tower1 = new TowerPoint();
-        tower1.setAltitude(55.5f);
-        tower1.setTowerNum("abcde");
-        tower1.setTowerTypeName("zx");
-        tower1.setTowerNumber("#3");
-        tower1.setLatitude(36.10067);
-        tower1.setLongitude(117.15577);
-        towerLists.add(tower1);
-
-        tower1 = new TowerPoint();
-        tower1.setAltitude(54.5f);
-        tower1.setTowerNum("abcde");
-        tower1.setTowerTypeName("nz");
-        tower1.setTowerNumber("#2");
-        tower1.setLatitude(36.10067);
-        tower1.setLongitude(117.1522);
-        towerLists.add(tower1);
-
-        tower1.setAltitude(53.5f);
-        tower1.setTowerNum("abcd");
-        tower1.setTowerTypeName("zx");
-        tower1.setTowerNumber("#1");
-        tower1.setLatitude(36.10194);
-        tower1.setLongitude(117.14923);
-        towerLists.add(tower1);
-        //loadTower(towerLists);
-
-
-        List<TowerPoint> mPointList = new ArrayList<TowerPoint>();
-        mPointList = loadTower(towerLists);
-        System.out.println("航点个数="+mPointList.size());
-        System.out.println("航点号："+mPointList.get(0).getId()+",随机塔号="+mPointList.get(0).getTowerNum()+",塔号="+mPointList.get(0).getTowerNumber()+",塔类型="+mPointList.get(0).getTowerTypeName()+",高度="+mPointList.get(0).getAltitude()+",经度="+mPointList.get(0).getLongitude()+"，纬度="+mPointList.get(0).getLatitude());
-        System.out.println("航点号："+mPointList.get(1).getId()+",随机塔号="+mPointList.get(1).getTowerNum()+",塔号="+mPointList.get(1).getTowerNumber()+",塔类型="+mPointList.get(1).getTowerTypeName()+",高度="+mPointList.get(1).getAltitude()+",经度="+mPointList.get(1).getLongitude()+"，纬度="+mPointList.get(1).getLatitude());
+        String a = "#33";
+        int b = Integer.parseInt(a.substring(1));
+        System.out.println(b);
     }
 
     public void takePhoto(){
@@ -352,7 +373,32 @@ public class HFDManager {
         }
     }
 
-    public static List<TowerPoint> loadTower(List<TowerPoint> towerList){
+    public List<WayPoint> loadTower(List<TowerPoint> towerList){
+        wayPointList  = new ArrayList<WayPoint>();
+        List<WayPoint> prePointList = new ArrayList<WayPoint>();
+        List<WayPoint> postPointList = new ArrayList<WayPoint>();
+//        if(towerList.size() == 0){
+//            sendErrorMessage("杆塔数据为空");
+//            return null;
+//        } else if(towerList.size() == 1){
+//            //sendErrorMessage("只上传了一个直线塔，生成的航点会在塔的北向和南向，请注意飞行安全！");
+//            return oneTGeneratePoints(towerList);
+//            //有两个塔
+//        }else if(towerList.size()==2){
+//            return twoTGeneratePoints(towerList);
+//        } else {
+//            System.out.println("航点个数大于2");
+//            return mulTGeneratePoints(towerList);
+//        }
+        if(towerList.size() == 0){
+            sendErrorMessage("杆塔数据为空");
+        }else{
+            wayPointList = FileUtils.loadXml(towerList);
+        }
+        return wayPointList;
+    }
+
+    public static List<TowerPoint> loadTower1(List<TowerPoint> towerList){
         //FileUtils.writeLogFile(0, "call loadTower() method.");
         if(towerList.size() == 0){
             //sendErrorMessage("杆塔数据为空");
@@ -375,13 +421,52 @@ public class HFDManager {
         return null;
     }
 
-    public void uploadNewPoint(List<TowerPoint> towerList){
-        for(int i=0;i<towerList.size();i++){
+    public void oneButtonStart(){
+        MAVLinkPacket packet = new MAVLinkPacket();
+        msg_camera_auto_takepic autoTakepic= new msg_camera_auto_takepic(packet);
+        autoTakepic.autoNum = (byte)1;
+        packet = autoTakepic.pack();
+        packet.generateCRC();
+        sendUserData(packet.encodePacket());
+    }
 
+    public void powerFailure(){
+        MAVLinkPacket packet = new MAVLinkPacket();
+        msg_waypoint_power_fail powerFail= new msg_waypoint_power_fail(packet);
+        packet = powerFail.pack();
+        packet.generateCRC();
+        sendUserData(packet.encodePacket());
+    }
+
+    public void uploadPoint(List<WayPoint> towerList){
+        wayPointList.clear();
+        wayPointList = towerList;
+        if(towerList.size() == 0)
+            sendErrorMessage("航点数据为空");
+        else {
+            pointNum = 0;
+            MAVLinkPacket packet = new MAVLinkPacket();
+            msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
+            pointUpload.towerNum = Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1));
+            pointUpload.pointType = (byte) wayPointList.get(pointNum).getPointType();
+            pointUpload.variety = (byte) wayPointList.get(pointNum).getVariety();
+            pointUpload.seqNum = pointNum;
+            pointUpload.latitude = wayPointList.get(pointNum).getLatitude();
+            pointUpload.longitude = wayPointList.get(pointNum).getLongitude();
+            pointUpload.altitude = wayPointList.get(pointNum).getAltitude();
+            pointUpload.toward = wayPointList.get(pointNum).getToward();
+            pointUpload.pitch = wayPointList.get(pointNum).getApitch();
+            pointUpload.angle = wayPointList.get(pointNum).getAngle();
+            pointUpload.objType = (byte) wayPointList.get(pointNum).getObject();
+            pointUpload.side = (byte) wayPointList.get(pointNum).getSide();
+            pointUpload.totalNum = wayPointList.size();
+            packet = pointUpload.pack();
+            packet.generateCRC();
+            sendUserData(packet.encodePacket());
         }
     }
 
-    public void uploadPoint(List<TowerPoint> towerList){
+    public void uploadPoint1(List<TowerPoint> towerList){
         backPointList.clear();
         backPointList = towerList;
         realPoint = backPointList.get(realSeq);
@@ -666,6 +751,121 @@ public class HFDManager {
                                     //反馈命令处理 以下表示拍照完成
                                     if ("6".equals(Integer.toHexString(data[5] & 0x0FF))) {
                                         rebackMsg(1,"success","call stopGoHome() method success");
+                                    }else if("47".equals(Integer.toHexString(data[5] & 0x0FF))){
+                                        if("1".equals(Integer.toHexString(data[6] & 0x0FF))) {
+                                            if (data.length >= 47) {
+                                                //对比塔号
+                                                int mtowerNum = 0;
+                                                mtowerNum |= (data[7] & 0xFF);
+                                                mtowerNum |= (data[8] & 0xFF) << 8;
+                                                mtowerNum |= (data[9] & 0xFF) << 16;
+                                                mtowerNum |= (data[10] & 0xFF) << 24;
+                                                Log.d("uploadfile", "塔号=" + mtowerNum);
+                                                if (mtowerNum == Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1))) {
+                                                    //对比点类型
+                                                    Log.d("uploadfile", "点类型=" + (data[11] & 0x0FF));
+                                                    if ((data[11] & 0x0FF) == wayPointList.get(pointNum).getPointType()) {
+                                                        //对比识别点属性
+                                                        Log.d("uploadfile", "识别点属性=" + (data[12] & 0x0FF));
+                                                        if ((data[12] & 0x0FF) == wayPointList.get(pointNum).getVariety()) {
+                                                            //对比飞行顺序号
+                                                            int mseqNum = 0;
+                                                            mseqNum |= (data[13] & 0xFF);
+                                                            mseqNum |= (data[14] & 0xFF) << 8;
+                                                            mseqNum |= (data[15] & 0xFF) << 16;
+                                                            mseqNum |= (data[16] & 0xFF) << 24;
+                                                            Log.d("uploadfile", "飞行顺序号=" + mseqNum);
+                                                            if (mseqNum == pointNum) {
+                                                                //对比纬度
+                                                                int mlatitude = 0;
+                                                                mlatitude |= (data[17] & 0xFF);
+                                                                mlatitude |= (data[18] & 0xFF) << 8;
+                                                                mlatitude |= (data[19] & 0xFF) << 16;
+                                                                mlatitude |= (data[20] & 0xFF) << 24;
+                                                                Log.d("uploadfile", "纬度=" + Float.intBitsToFloat(mlatitude));
+                                                                if (Float.intBitsToFloat(mlatitude) - wayPointList.get(pointNum).getLatitude() < 0.00001) {
+                                                                    //对比经度
+                                                                    int mlongtidude = 0;
+                                                                    mlongtidude |= (data[21] & 0xFF);
+                                                                    mlongtidude |= (data[22] & 0xFF) << 8;
+                                                                    mlongtidude |= (data[23] & 0xFF) << 16;
+                                                                    mlongtidude |= (data[24] & 0xFF) << 24;
+                                                                    Log.d("uploadfile", "经度=" + Float.intBitsToFloat(mlongtidude));
+                                                                    if (Float.intBitsToFloat(mlongtidude) - wayPointList.get(pointNum).getLongitude() < 0.00001) {
+                                                                        //对比高度
+                                                                        int maltitude = 0;
+                                                                        maltitude |= (data[25] & 0xFF);
+                                                                        maltitude |= (data[26] & 0xFF) << 8;
+                                                                        maltitude |= (data[27] & 0xFF) << 16;
+                                                                        maltitude |= (data[28] & 0xFF) << 24;
+                                                                        Log.d("uploadfile", "高度=" + Float.intBitsToFloat(maltitude));
+                                                                        if (Float.intBitsToFloat(maltitude) - wayPointList.get(pointNum).getAltitude() < 0.1) {
+                                                                            //对比机头朝向
+                                                                            int mtoward = 0;
+                                                                            mtoward |= (data[29] & 0xFF);
+                                                                            mtoward |= (data[30] & 0xFF) << 8;
+                                                                            mtoward |= (data[31] & 0xFF) << 16;
+                                                                            mtoward |= (data[32] & 0xFF) << 24;
+                                                                            Log.d("uploadfile", "机头朝向=" + Float.intBitsToFloat(mtoward));
+                                                                            if (Float.intBitsToFloat(mtoward) - wayPointList.get(pointNum).getToward() < 0.1) {
+                                                                                //对比俯仰角
+                                                                                int mpitch = 0;
+                                                                                mpitch |= (data[33] & 0xFF);
+                                                                                mpitch |= (data[34] & 0xFF) << 8;
+                                                                                mpitch |= (data[35] & 0xFF) << 16;
+                                                                                mpitch |= (data[36] & 0xFF) << 24;
+                                                                                Log.d("uploadfile", "俯仰角=" + Float.intBitsToFloat(mpitch));
+                                                                                if (Float.intBitsToFloat(mpitch) - wayPointList.get(pointNum).getApitch() < 0.1) {
+                                                                                    //对比识别夹角
+                                                                                    int mangle = 0;
+                                                                                    mangle |= (data[37] & 0xFF);
+                                                                                    mangle |= (data[38] & 0xFF) << 8;
+                                                                                    mangle |= (data[39] & 0xFF) << 16;
+                                                                                    mangle |= (data[40] & 0xFF) << 24;
+                                                                                    Log.d("uploadfile", "识别夹角=" + Float.intBitsToFloat(mangle));
+                                                                                    if (Float.intBitsToFloat(mangle) - wayPointList.get(pointNum).getAngle() < 0.1) {
+                                                                                        //对比识别端类型
+                                                                                        Log.d("uploadfile", "识别端类型=" + (data[41] & 0x0FF));
+                                                                                        if ((data[41] & 0x0FF) == wayPointList.get(pointNum).getObject()) {
+                                                                                            //对比线侧
+                                                                                            Log.d("uploadfile", "线侧=" + (data[42] & 0x0FF));
+                                                                                            if ((data[42] & 0x0FF) == wayPointList.get(pointNum).getSide()) {
+                                                                                                //对比识别点总数量
+                                                                                                int atotal = 0;
+                                                                                                atotal |= (data[43] & 0xFF);
+                                                                                                atotal |= (data[44] & 0xFF) << 8;
+                                                                                                atotal |= (data[45] & 0xFF) << 16;
+                                                                                                atotal |= (data[46] & 0xFF) << 24;
+                                                                                                Log.d("uploadfile", "识别点总数量=" + atotal);
+                                                                                                if (atotal == wayPointList.size())
+                                                                                                    postWaypoint(1,0);
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                    }
+                                                }
+                                            } else {
+                                                rebackMsg(7, "fail", "接收航点验证数据错误 " + BytesToHexString(data, data.length));
+                                            }
+                                        }else if("2".equals(Integer.toHexString(data[6] & 0x0FF))){
+                                            postWaypoint(2,0);
+                                        }else if("3".equals(Integer.toHexString(data[6] & 0x0FF))){
+                                            //Log.d("uploadfile","接收到返回数据 到达航点信息");
+                                            int dnum = 0;
+                                            dnum |= (data[7] & 0xFF);
+                                            dnum |= (data[8] & 0xFF) << 8;
+                                            dnum |= (data[9] & 0xFF) << 16;
+                                            dnum |= (data[10] & 0xFF) << 24;
+                                            postWaypoint(3,dnum);
+                                        }
                                     }
                                 }
                             }
@@ -676,6 +876,48 @@ public class HFDManager {
 
         }
     };
+
+    private void  postWaypoint(int actionType, int seqNum){
+        if(actionType == 1){
+            pointNum++;
+            if(pointNum < wayPointList.size()) {
+                MAVLinkPacket packet = new MAVLinkPacket();
+                msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
+                pointUpload.towerNum = Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1));
+                pointUpload.pointType = (byte) wayPointList.get(pointNum).getPointType();
+                pointUpload.variety = (byte) wayPointList.get(pointNum).getVariety();
+                pointUpload.seqNum = pointNum;
+                pointUpload.latitude = wayPointList.get(pointNum).getLatitude();
+                pointUpload.longitude = wayPointList.get(pointNum).getLongitude();
+                pointUpload.altitude = wayPointList.get(pointNum).getAltitude();
+                pointUpload.toward = wayPointList.get(pointNum).getToward();
+                pointUpload.pitch = wayPointList.get(pointNum).getApitch();
+                pointUpload.angle = wayPointList.get(pointNum).getAngle();
+                pointUpload.objType = (byte) wayPointList.get(pointNum).getObject();
+                pointUpload.side = (byte) wayPointList.get(pointNum).getSide();
+                pointUpload.totalNum = wayPointList.size();
+                packet = pointUpload.pack();
+                packet.generateCRC();
+                sendUserData(packet.encodePacket());
+            }else{
+                rebackMsg(7, "success", "上传航点成功");
+            }
+        }else if(actionType == 2){
+            rebackMsg(7, "fail", "天空端返回收到航点信息有误 ");
+        }else{
+            try{
+                object.put("result ","start");
+                object.put("tower ",wayPointList.get(seqNum).getTowerNum());
+                object.put("point ",seqNum);
+            }catch (Exception e){
+                object = null;
+            }
+            messServer.setInfomation((byte)15,object);
+            FileUtils.writeLogFile(0, "");
+            if(seqNum == wayPointList.size()-1)
+                rebackMsg(15,"success","巡检结束");
+        }
+    }
 
     //回调函数们
     private void settingCallback(){
@@ -1103,4 +1345,48 @@ public class HFDManager {
         FileUtils.writeLogFile(2, noteLog);
     }
 
+    private JSONObject getWindWarning(){
+        FileUtils.writeLogFile(0, "call getWindWarning() method.");
+        JSONObject dataObject = new JSONObject();
+        try {
+            if(flightController != null){
+                if(mFControlState == null){
+                    mFControlState = flightController.getState();
+                }
+                FlightWindWarning flightWindWarning = mFControlState.getFlightWindWarning();
+                dataObject.put("result", "success");
+                dataObject.put("alarmLevel", flightWindWarning.toString());
+            }else{
+                dataObject.put("result", "fail");
+            }
+
+        } catch (JSONException e) {
+            sendErrorMessage("程序异常");
+            FileUtils.writeLogFile(2, "call getWindWarning() error is "+e.getMessage());
+        }
+        return dataObject;
+    }
+
+}
+class WarningTimerTask extends TimerTask {
+    @Override
+    public void run(){
+        JSONObject dataObject = new JSONObject();
+        try {
+            if(HFDManager.flightController != null){
+                if(HFDManager.mFControlState == null){
+                    HFDManager.mFControlState = HFDManager.flightController.getState();
+                }
+                FlightWindWarning flightWindWarning = HFDManager.mFControlState.getFlightWindWarning();
+                dataObject.put("result", "success");
+                dataObject.put("alarmLevel", flightWindWarning.toString());
+                HFDManager.messServer.setInfomation((byte)18,dataObject);
+            }else{
+                FileUtils.writeLogFile(2, "flightController is null "+HFDManager.flightController);
+            }
+
+        } catch (JSONException e) {
+            FileUtils.writeLogFile(2, "timer run error is "+e.getMessage());
+        }
+    }
 }
