@@ -163,17 +163,17 @@ public class HFDManager {
     }
 
     public static void main(String args[]){
-//        List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
-//        TowerPoint tower1 = new TowerPoint();
-//        tower1 = new TowerPoint();
-//        tower1.setAltitude(56.5f);
-//        tower1.setTowerNum("#1");
-//        tower1.setTowerTypeName("zx");
-//        tower1.setTowerNumber("#4");
-//        tower1.setLatitude(36.0972f);
-//        tower1.setLongitude(117.16058f);
-//        towerLists.add(tower1);
-//
+        List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
+        TowerPoint tower1 = new TowerPoint();
+        tower1 = new TowerPoint();
+        tower1.setAltitude(56.5f);
+        tower1.setTowerNum("#1");
+        tower1.setTowerTypeName("zx");
+        tower1.setTowerNumber("#4");
+        tower1.setLatitude(36.0972f);
+        tower1.setLongitude(117.16058f);
+        towerLists.add(tower1);
+
 //        tower1 = new TowerPoint();
 //        tower1.setAltitude(55.5f);
 //        tower1.setTowerNum("#2");
@@ -211,9 +211,15 @@ public class HFDManager {
 //        System.out.println(getDistance(36.686488686,117.12664155,36.68648727,117.12664053));
 //        System.out.println(getDistance(36.686511779,117.12646928,36.68650194,117.12666014));
 
-        String a = "#33";
-        int b = Integer.parseInt(a.substring(1));
-        System.out.println(b);
+        List<TowerPoint> mPointList = new ArrayList<TowerPoint>();
+        mPointList = loadTower1(towerLists);
+        System.out.println("towerLists 大小="+towerLists.size());
+        System.out.println("mPointList 大小="+mPointList.size());
+
+        towerLists.clear();
+        towerLists = mPointList;
+        System.out.println("towerLists 大小="+towerLists.size());
+        System.out.println("mPointList 大小="+mPointList.size());
     }
 
     public void takePhoto(){
@@ -442,7 +448,8 @@ public class HFDManager {
         Log.d("uploadPoint","传输的list大小为"+upWayPointList.size());
         wayPointList.clear();
         Log.d("uploadPoint","wayPointList大小为"+wayPointList.size());
-        wayPointList = upWayPointList;
+        //wayPointList = upWayPointList;
+        wayPointList.addAll(upWayPointList);
         Log.d("uploadPoint","赋值后传输的list大小为"+upWayPointList.size());
         Log.d("uploadPoint","赋值后wayPointList大小为"+wayPointList.size());
         if(upWayPointList.size() == 0) {
