@@ -375,8 +375,8 @@ public class HFDManager {
 
     public List<WayPoint> loadTower(List<TowerPoint> towerList){
         wayPointList  = new ArrayList<WayPoint>();
-        List<WayPoint> prePointList = new ArrayList<WayPoint>();
-        List<WayPoint> postPointList = new ArrayList<WayPoint>();
+//        List<WayPoint> prePointList = new ArrayList<WayPoint>();
+//        List<WayPoint> postPointList = new ArrayList<WayPoint>();
 //        if(towerList.size() == 0){
 //            sendErrorMessage("杆塔数据为空");
 //            return null;
@@ -438,12 +438,16 @@ public class HFDManager {
         sendUserData(packet.encodePacket());
     }
 
-    public void uploadPoint(List<WayPoint> towerList){
+    public void uploadPoint(List<WayPoint> upWayPointList){
+        Log.d("uploadPoint","传输的list大小为"+upWayPointList.size());
         wayPointList.clear();
-        wayPointList = towerList;
-        if(towerList.size() == 0)
+        Log.d("uploadPoint","wayPointList大小为"+wayPointList.size());
+        wayPointList = upWayPointList;
+        Log.d("uploadPoint","赋值后传输的list大小为"+upWayPointList.size());
+        Log.d("uploadPoint","赋值后wayPointList大小为"+wayPointList.size());
+        if(upWayPointList.size() == 0) {
             sendErrorMessage("航点数据为空");
-        else {
+        }else {
             pointNum = 0;
             MAVLinkPacket packet = new MAVLinkPacket();
             msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
