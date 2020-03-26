@@ -445,38 +445,35 @@ public class HFDManager {
     }
 
     public void uploadPoint(List<WayPoint> upWayPointList){
-        Log.d("uploadPoint","传输的list大小为"+upWayPointList.size());
-        Log.d("uploadPoint","wayPointList大小为"+wayPointList.size());
-        wayPointList.clear();
-        Log.d("uploadPoint","传输的list大小为"+upWayPointList.size());
-        Log.d("uploadPoint","wayPointList大小为"+wayPointList.size());
-        Log.d("uploadPoint","wayPointList大小为"+wayPointList.size());
-        //wayPointList = upWayPointList;
-        wayPointList.addAll(upWayPointList);
-        Log.d("uploadPoint","赋值后传输的list大小为"+upWayPointList.size());
-        Log.d("uploadPoint","赋值后wayPointList大小为"+wayPointList.size());
-        if(upWayPointList.size() == 0) {
-            sendErrorMessage("航点数据为空");
+        List<WayPoint> receivePointList = new ArrayList<>(upWayPointList);
+        if(wayPointList.size() == receivePointList.size()) {
+            wayPointList.clear();
+            wayPointList.addAll(receivePointList);
+            if (receivePointList.size() == 0) {
+                sendErrorMessage("航点数据为空");
+            } else {
+                pointNum = 0;
+                MAVLinkPacket packet = new MAVLinkPacket();
+                msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
+                pointUpload.towerNum = Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1));
+                pointUpload.pointType = (byte) wayPointList.get(pointNum).getPointType();
+                pointUpload.variety = (byte) wayPointList.get(pointNum).getVariety();
+                pointUpload.seqNum = pointNum;
+                pointUpload.latitude = wayPointList.get(pointNum).getLatitude();
+                pointUpload.longitude = wayPointList.get(pointNum).getLongitude();
+                pointUpload.altitude = wayPointList.get(pointNum).getAltitude();
+                pointUpload.toward = wayPointList.get(pointNum).getToward();
+                pointUpload.pitch = wayPointList.get(pointNum).getApitch();
+                pointUpload.angle = wayPointList.get(pointNum).getAngle();
+                pointUpload.objType = (byte) wayPointList.get(pointNum).getObject();
+                pointUpload.side = (byte) wayPointList.get(pointNum).getSide();
+                pointUpload.totalNum = wayPointList.size();
+                packet = pointUpload.pack();
+                packet.generateCRC();
+                sendUserData(packet.encodePacket());
+            }
         }else {
-            pointNum = 0;
-            MAVLinkPacket packet = new MAVLinkPacket();
-            msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
-            pointUpload.towerNum = Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1));
-            pointUpload.pointType = (byte) wayPointList.get(pointNum).getPointType();
-            pointUpload.variety = (byte) wayPointList.get(pointNum).getVariety();
-            pointUpload.seqNum = pointNum;
-            pointUpload.latitude = wayPointList.get(pointNum).getLatitude();
-            pointUpload.longitude = wayPointList.get(pointNum).getLongitude();
-            pointUpload.altitude = wayPointList.get(pointNum).getAltitude();
-            pointUpload.toward = wayPointList.get(pointNum).getToward();
-            pointUpload.pitch = wayPointList.get(pointNum).getApitch();
-            pointUpload.angle = wayPointList.get(pointNum).getAngle();
-            pointUpload.objType = (byte) wayPointList.get(pointNum).getObject();
-            pointUpload.side = (byte) wayPointList.get(pointNum).getSide();
-            pointUpload.totalNum = wayPointList.size();
-            packet = pointUpload.pack();
-            packet.generateCRC();
-            sendUserData(packet.encodePacket());
+            sendErrorMessage("飞行航点数据跟生成的航点数据不一致");
         }
     }
 
