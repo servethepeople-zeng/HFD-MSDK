@@ -150,7 +150,7 @@ public class FileUtils {
         for(int i=0;i<towerList.size();i++) {
             tempMarkPoint.clear();
             try {
-                File file = new File("/mnt/internal_sd/HFD/"+towerList.get(i).getTowerNum()+".xml");
+                File file = new File("/mnt/internal_sd/HFD/"+towerList.get(i).getTowerNumber()+".xml");
                 InputStream inputStream = new FileInputStream(file);
                 SAXParserFactory spf = SAXParserFactory.newInstance();
                 SAXParser saxParser = spf.newSAXParser();
@@ -173,13 +173,13 @@ public class FileUtils {
                 }
             });
             for(int j=0;j<tempMarkPoint.size();j++){
-                if(tempMarkPoint.get(i).getSide() == 1)
+                if(tempMarkPoint.get(j).getSide() == 1)
                     listMarkPoint.add(tempMarkPoint.get(j));
                 else
                     break;
             }
             for(int k=tempMarkPoint.size()-1;k>-1;k--){
-                if(tempMarkPoint.get(i).getSide() == 2)
+                if(tempMarkPoint.get(k).getSide() == 2)
                     tempMarkPoint1.add(tempMarkPoint.get(k));
                 else
                     break;
