@@ -446,7 +446,10 @@ public class HFDManager {
 
     public void uploadPoint(List<WayPoint> upWayPointList){
         Log.d("uploadPoint","传输的list大小为"+upWayPointList.size());
+        Log.d("uploadPoint","wayPointList大小为"+wayPointList.size());
         wayPointList.clear();
+        Log.d("uploadPoint","传输的list大小为"+upWayPointList.size());
+        Log.d("uploadPoint","wayPointList大小为"+wayPointList.size());
         Log.d("uploadPoint","wayPointList大小为"+wayPointList.size());
         //wayPointList = upWayPointList;
         wayPointList.addAll(upWayPointList);
