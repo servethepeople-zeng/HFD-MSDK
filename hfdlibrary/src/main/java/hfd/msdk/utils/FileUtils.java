@@ -185,7 +185,7 @@ public class FileUtils {
                     break;
             }
         }
-        for(int l=0;l<tempMarkPoint1.size();l++)
+        for(int l=tempMarkPoint1.size()-1;l>-1;l--)
             listMarkPoint.add(tempMarkPoint1.get(l));
         return listMarkPoint;
     }
