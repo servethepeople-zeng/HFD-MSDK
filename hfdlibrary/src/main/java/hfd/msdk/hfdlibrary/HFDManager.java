@@ -493,7 +493,7 @@ public class HFDManager {
                     public void onResult(DJIError djiError) {
                         if(djiError == null) {
                             try{
-                                object.put("result ","success");
+                                object.put("result","success");
                             }catch (Exception e){
                                 object = null;
                             }
@@ -522,9 +522,9 @@ public class HFDManager {
                     public void onResult(DJIError djiError) {
                         if(djiError == null){
                             try{
-                                object.put("result ","start");
-                                object.put("tower ",realPoint.getTowerNum());
-                                object.put("point ",realPoint.getId());
+                                object.put("result","start");
+                                object.put("tower",realPoint.getTowerNum());
+                                object.put("point",realPoint.getId());
                             }catch (Exception e){
                                 object = null;
                             }
@@ -918,9 +918,9 @@ public class HFDManager {
             rebackMsg(7, "fail", "天空端返回收到航点信息有误 ");
         }else{
             try{
-                object.put("result ","start");
-                object.put("tower ",wayPointList.get(seqNum).getTowerNum());
-                object.put("point ",seqNum);
+                object.put("result","start");
+                object.put("tower",wayPointList.get(seqNum).getTowerNum());
+                object.put("point",seqNum);
             }catch (Exception e){
                 object = null;
             }
