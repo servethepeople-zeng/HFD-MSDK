@@ -952,7 +952,7 @@ public class HFDManager {
         KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
             @Override
             public void onSuccess() {
-                //Log.d("senddata",""+ Helper.byte2hex(showData));
+                Log.d("senddata",""+ Helper.byte2hex(showData));
                 FileUtils.writeLogFile(1, "senddata success:"+Helper.byte2hex(showData));
             }
             @Override
