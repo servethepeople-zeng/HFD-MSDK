@@ -447,7 +447,7 @@ public class HFDManager {
     public void uploadPoint(List<WayPoint> upWayPointList){
         List<WayPoint> receivePointList = new ArrayList<>(upWayPointList);
         if(wayPointList.size() == receivePointList.size()) {
-            wayPointList.clear();
+            wayPointList = new ArrayList<WayPoint>();
             wayPointList.addAll(receivePointList);
             if (receivePointList.size() == 0) {
                 sendErrorMessage("航点数据为空");
@@ -751,7 +751,7 @@ public class HFDManager {
         public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
             if (newValue instanceof byte[]) {
                 byte[] data = (byte[]) newValue;
-                Log.d("receivedata","receive data success! " + BytesToHexString(data, data.length));
+                Log.d("receivedata","HFD receive data success! " + BytesToHexString(data, data.length));
                 if(data.length>7) {
                     if ("fd".equals(Integer.toHexString(data[0] & 0x0FF))) {
                         if ("14".equals(Integer.toHexString(data[2] & 0x0FF))) {
