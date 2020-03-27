@@ -9,7 +9,7 @@ package hfd.msdk.model;
 
 public class TowerPoint {
 
-    private int id;//航点号
+    private String id;//航点号
     private String towerNum;//塔号(自定义编排的序号)
     private String towerTypeName;//塔类型
     private String kiloName;//塔牌上的千伏数
@@ -30,7 +30,7 @@ public class TowerPoint {
         this.pointType = pointType;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
@@ -50,7 +50,7 @@ public class TowerPoint {
         return altitude;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

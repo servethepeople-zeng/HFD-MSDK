@@ -139,7 +139,7 @@ public class FileUtils {
 
     /**
      * 加载xml文件
-     * /mnt/internal_sd/HFD/8#.xml
+     * /mnt/internal_sd/
      * @param towerList
      * @return List<WayPoint>
      */
