@@ -766,6 +766,7 @@ public class HFDManager {
                                                 mtowerNum |= (data[8] & 0xFF) << 8;
                                                 mtowerNum |= (data[9] & 0xFF) << 16;
                                                 mtowerNum |= (data[10] & 0xFF) << 24;
+                                                Log.d("uploadfile", "wayPointList 大小=" + wayPointList.size()+",pointNum="+pointNum);
                                                 Log.d("uploadfile", "塔号=" + mtowerNum);
                                                 if (mtowerNum == Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1))) {
                                                     //对比点类型
