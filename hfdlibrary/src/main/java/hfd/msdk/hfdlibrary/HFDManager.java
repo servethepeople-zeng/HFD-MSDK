@@ -757,12 +757,7 @@ public class HFDManager {
                         if ("14".equals(Integer.toHexString(data[2] & 0x0FF))) {
                             if ("ff".equals(Integer.toHexString(data[3] & 0x0FF))) {
                                 if ("be".equals(Integer.toHexString(data[4] & 0x0FF))) {
-
-                                }else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
-                                    //反馈命令处理 以下表示拍照完成
-                                    if ("6".equals(Integer.toHexString(data[5] & 0x0FF))) {
-                                        rebackMsg(1,"success","call stopGoHome() method success");
-                                    }else if("47".equals(Integer.toHexString(data[5] & 0x0FF))){
+                                    if("47".equals(Integer.toHexString(data[5] & 0x0FF))){
                                         if("1".equals(Integer.toHexString(data[6] & 0x0FF))) {
                                             if (data.length >= 47) {
                                                 //对比塔号
@@ -877,6 +872,11 @@ public class HFDManager {
                                             dnum |= (data[10] & 0xFF) << 24;
                                             postWaypoint(3,dnum);
                                         }
+                                    }
+                                }else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
+                                    //反馈命令处理 以下表示拍照完成
+                                    if ("6".equals(Integer.toHexString(data[5] & 0x0FF))) {
+                                        rebackMsg(1,"success","call stopGoHome() method success");
                                     }
                                 }
                             }
