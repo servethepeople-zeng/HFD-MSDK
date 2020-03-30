@@ -150,7 +150,7 @@ public class FileUtils {
         for(int i=0;i<towerList.size();i++) {
             tempMarkPoint.clear();
             try {
-                File file = new File("/mnt/internal_sd/HFD/"+towerList.get(i).getTowerNumber()+".xml");
+                File file = new File("/mnt/internal_sd/HFD/"+towerList.get(i).getTowerNum()+".xml");
                 InputStream inputStream = new FileInputStream(file);
                 SAXParserFactory spf = SAXParserFactory.newInstance();
                 SAXParser saxParser = spf.newSAXParser();
