@@ -1349,7 +1349,7 @@ public class HFDManager {
 
     private void rebackMsg(int type,String rebackContent, String noteLog){
         try{
-            object.put("result ",rebackContent);
+            object.put("result",rebackContent);
         }catch (Exception e){
             object = null;
         }
