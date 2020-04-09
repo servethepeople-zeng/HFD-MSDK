@@ -36,6 +36,7 @@ import dji.keysdk.PayloadKey;
 import dji.keysdk.callback.ActionCallback;
 import dji.keysdk.callback.KeyListener;
 import dji.sdk.flightcontroller.FlightController;
+import dji.sdk.mission.MissionControl;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
@@ -540,6 +541,9 @@ public class HFDManager {
     }
     public void pauseMission(){
         FileUtils.writeLogFile(0, "call pauseMission() method.");
+        if (waypointMissionOperator == null) {
+            waypointMissionOperator = MissionControl.getInstance().getWaypointMissionOperator();
+        }
         if(WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())) {
             waypointMissionOperator.pauseMission(new CommonCallbacks.CompletionCallback() {
                 @Override
