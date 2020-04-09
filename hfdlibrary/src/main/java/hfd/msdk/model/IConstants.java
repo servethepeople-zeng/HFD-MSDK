@@ -72,4 +72,7 @@ public class IConstants
     public static float Qx30U_Zoom_H29	= 3.024f;
     public static float Qx30U_Zoom_H30	= 2.915f;
     public static float Qx30U_Zoom_H31	= 2.900f;
+
+    public static String loadTowerId = "871cd7ec97e64699a7c80a3e025a97c7";
+    public static String loadTowerNum = "#8";
 }

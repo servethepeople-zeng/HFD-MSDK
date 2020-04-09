@@ -23,6 +23,8 @@ import hfd.msdk.model.WayPoint;
 
 import static hfd.msdk.hfdlibrary.HFDManager.logLevelType;
 import static hfd.msdk.hfdlibrary.HFDManager.sendErrorMessage;
+import static hfd.msdk.model.IConstants.loadTowerId;
+import static hfd.msdk.model.IConstants.loadTowerNum;
 
 /**
  * Created by Arvin zeng on 19/12/20
@@ -149,6 +151,8 @@ public class FileUtils {
         List<WayPoint> tempMarkPoint1 = new ArrayList<WayPoint>();
         for(int i=0;i<towerList.size();i++) {
             tempMarkPoint.clear();
+            loadTowerId = towerList.get(i).getId();
+            loadTowerNum = towerList.get(i).getTowerNum();
             try {
                 File file = new File(filePath+"/"+towerList.get(i).getTowerNum()+".xml");
                 InputStream inputStream = new FileInputStream(file);
