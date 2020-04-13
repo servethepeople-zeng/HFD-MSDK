@@ -45,6 +45,7 @@ import hfd.msdk.mavlink.msg_GC_mode;
 import hfd.msdk.mavlink.msg_YT_degree;
 import hfd.msdk.mavlink.msg_YT_reset;
 import hfd.msdk.mavlink.msg_YT_sdegree;
+import hfd.msdk.mavlink.msg_cal_stop;
 import hfd.msdk.mavlink.msg_camera_auto_takepic;
 import hfd.msdk.mavlink.msg_camera_zoom;
 import hfd.msdk.mavlink.msg_get_storage;
@@ -588,21 +589,22 @@ public class HFDManager {
     }
     public void stopMission(){
         FileUtils.writeLogFile(0, "call stopMission() method.");
-        if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())
-                || WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())) {
-            waypointMissionOperator.stopMission(new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    if(djiError==null){
-                        rebackMsg(12,"success","call stopMission() success now flight state is "+waypointMissionOperator.getCurrentState());
-                    }else{
-                        rebackMsg(12,"停止航点飞行发送错误","call stopMission() error message is "+djiError.getDescription());
-                    }
-                }
-            });
-        }else{
-            rebackMsg(12,"飞机状态错误，无法执行停止航线飞行操作","call resumeMission() 无法执行继续飞行方法，飞机当前状态为"+waypointMissionOperator.getCurrentState());
-        }
+//        if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())
+//                || WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())) {
+//            waypointMissionOperator.stopMission(new CommonCallbacks.CompletionCallback() {
+//                @Override
+//                public void onResult(DJIError djiError) {
+//                    if(djiError==null){
+//                        rebackMsg(12,"success","call stopMission() success now flight state is "+waypointMissionOperator.getCurrentState());
+//                    }else{
+//                        rebackMsg(12,"停止航点飞行发送错误","call stopMission() error message is "+djiError.getDescription());
+//                    }
+//                }
+//            });
+//        }else{
+//            rebackMsg(12,"飞机状态错误，无法执行停止航线飞行操作","call resumeMission() 无法执行继续飞行方法，飞机当前状态为"+waypointMissionOperator.getCurrentState());
+//        }
+        createMAVLink(12, 0);
     }
     public void startGoHome(){
         if(flightController == null) {
@@ -1071,6 +1073,12 @@ public class HFDManager {
             case 11:
                 msg_YT_reset reset = new msg_YT_reset(packet);
                 packet = reset.pack();
+                packet.generateCRC();
+                sendUserData(packet.encodePacket());
+                break;
+            case 12:
+                msg_cal_stop calStop = new msg_cal_stop(packet);
+                packet = calStop.pack();
                 packet.generateCRC();
                 sendUserData(packet.encodePacket());
                 break;
