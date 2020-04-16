@@ -447,10 +447,33 @@ public class HFDManager {
     }
 
     public void uploadPoint(List<WayPoint> upWayPointList){
-        List<WayPoint> receivePointList = new ArrayList<>(upWayPointList);
-        wayPointList = new ArrayList<WayPoint>();
-        wayPointList.addAll(receivePointList);
-        if (receivePointList.size() == 0) {
+//        List<WayPoint> receivePointList = new ArrayList<>(upWayPointList);
+//        wayPointList = new ArrayList<WayPoint>();
+//        wayPointList.addAll(receivePointList);
+//        if (receivePointList.size() == 0) {
+//            sendErrorMessage("航点数据为空");
+//        } else {
+//            pointNum = 0;
+//            MAVLinkPacket packet = new MAVLinkPacket();
+//            msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
+//            pointUpload.towerNum = Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1));
+//            pointUpload.pointType = (byte) wayPointList.get(pointNum).getPointType();
+//            pointUpload.variety = (byte) wayPointList.get(pointNum).getVariety();
+//            pointUpload.seqNum = pointNum;
+//            pointUpload.latitude = wayPointList.get(pointNum).getLatitude();
+//            pointUpload.longitude = wayPointList.get(pointNum).getLongitude();
+//            pointUpload.altitude = wayPointList.get(pointNum).getAltitude();
+//            pointUpload.toward = wayPointList.get(pointNum).getToward();
+//            pointUpload.pitch = wayPointList.get(pointNum).getApitch();
+//            pointUpload.angle = wayPointList.get(pointNum).getAngle();
+//            pointUpload.objType = (byte) wayPointList.get(pointNum).getObject();
+//            pointUpload.side = (byte) wayPointList.get(pointNum).getSide();
+//            pointUpload.totalNum = wayPointList.size();
+//            packet = pointUpload.pack();
+//            packet.generateCRC();
+//            sendUserData(packet.encodePacket());
+//        }
+        if (wayPointList.size() == 0) {
             sendErrorMessage("航点数据为空");
         } else {
             pointNum = 0;
