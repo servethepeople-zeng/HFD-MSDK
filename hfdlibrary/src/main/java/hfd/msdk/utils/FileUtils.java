@@ -23,8 +23,6 @@ import hfd.msdk.model.WayPoint;
 
 import static hfd.msdk.hfdlibrary.HFDManager.logLevelType;
 import static hfd.msdk.hfdlibrary.HFDManager.sendErrorMessage;
-import static hfd.msdk.model.IConstants.loadTowerId;
-import static hfd.msdk.model.IConstants.loadTowerNum;
 
 /**
  * Created by Arvin zeng on 19/12/20
@@ -33,6 +31,8 @@ public class FileUtils {
 
     private static String filePath = Environment.getExternalStorageDirectory() + "/HFD";
     private static String logFilePath = Environment.getExternalStorageDirectory() + "/HFD/HFDMSDK.log";
+//        private static String filePath = "/HFD";
+//    private static String logFilePath = "/HFD/HFDMSDK.log";
 
     /**
      * 创建保存图片的文件夹,检查日志文件，超过20M了清空
@@ -147,50 +147,37 @@ public class FileUtils {
      */
     public static List<WayPoint> loadXml(List<TowerPoint> towerList){
         List<WayPoint> listMarkPoint = new ArrayList<WayPoint>();
-        List<WayPoint> tempMarkPoint = new ArrayList<WayPoint>();
-        List<WayPoint> tempMarkPoint1 = new ArrayList<WayPoint>();
+//        List<WayPoint> tempMarkPoint = new ArrayList<WayPoint>();
+//        List<WayPoint> tempMarkPoint1 = new ArrayList<WayPoint>();
+        String towerNames = "#";
         for(int i=0;i<towerList.size();i++) {
-            tempMarkPoint.clear();
-            loadTowerId = towerList.get(i).getId();
-            loadTowerNum = towerList.get(i).getTowerNum();
-            try {
-                File file = new File(filePath+"/"+towerList.get(i).getTowerNum()+".xml");
-                InputStream inputStream = new FileInputStream(file);
-                SAXParserFactory spf = SAXParserFactory.newInstance();
-                SAXParser saxParser = spf.newSAXParser();
-                MySaxHandler handler = new MySaxHandler();
-                saxParser.parse(inputStream, handler);
-                inputStream.close();
-                tempMarkPoint = handler.getTowerPoints();
-            } catch (Exception e) {
-                e.printStackTrace();
-                listMarkPoint.clear();
-                sendErrorMessage("航点文件错误");
-                break;
-            }
-
-            Collections.sort(tempMarkPoint, new Comparator<WayPoint>() {
-                @Override
-                public int compare(WayPoint o1, WayPoint o2) {
-                    int i = o1.getSeqNumber() - o2.getSeqNumber();
-                    return i;
-                }
-            });
-            for(int j=0;j<tempMarkPoint.size();j++){
-                if(tempMarkPoint.get(j).getSide() == 1)
-                    listMarkPoint.add(tempMarkPoint.get(j));
-                else
-                    break;
-            }
-            for(int k=tempMarkPoint.size()-1;k>-1;k--){
-                if(tempMarkPoint.get(k).getSide() == 2)
-                    tempMarkPoint1.add(tempMarkPoint.get(k));
-                else
-                    break;
-            }
+            towerNames = towerNames+towerList.get(i).getTowerNum().substring(1);
         }
-        for(int l=tempMarkPoint1.size()-1;l>-1;l--)
-            listMarkPoint.add(tempMarkPoint1.get(l));
+        System.out.println(towerNames);
+        try {
+            File file = new File(filePath+"/"+towerNames+".xml");
+            //File file = new File("F:\\"+towerNames+".xml");
+            //System.out.println(file.getPath());
+            InputStream inputStream = new FileInputStream(file);
+            SAXParserFactory spf = SAXParserFactory.newInstance();
+            SAXParser saxParser = spf.newSAXParser();
+            MySaxHandler handler = new MySaxHandler();
+            saxParser.parse(inputStream, handler);
+            inputStream.close();
+            listMarkPoint = handler.getTowerPoints();
+        } catch (Exception e) {
+            e.printStackTrace();
+            listMarkPoint.clear();
+            sendErrorMessage("航点文件错误");
+        }
+        Collections.sort(listMarkPoint, new Comparator<WayPoint>() {
+            @Override
+            public int compare(WayPoint o1, WayPoint o2) {
+                int i = o1.getSeqNumber() - o2.getSeqNumber();
+                return i;
+            }
+        });
+
         return listMarkPoint;
     }
 }

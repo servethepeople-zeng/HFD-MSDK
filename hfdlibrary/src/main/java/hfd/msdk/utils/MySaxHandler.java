@@ -51,7 +51,7 @@ public class MySaxHandler extends DefaultHandler{
      */
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
-
+        
         if("Point".equals(pointName)&&tagName != null) {
             String data = new String(ch, start, length);
             if ("id".equals(tagName))

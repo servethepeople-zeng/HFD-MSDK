@@ -165,63 +165,45 @@ public class HFDManager {
     }
 
     public static void main(String args[]){
+        List<WayPoint> mwaypoints = new ArrayList<WayPoint>();
+
         List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
         TowerPoint tower1 = new TowerPoint();
         tower1 = new TowerPoint();
-        tower1.setAltitude(56.5f);
-        tower1.setTowerNum("#1");
+        tower1.setAltitude(50f);
+        tower1.setId("afafdasgdsagdasg");
+        tower1.setTowerNum("#11");
         tower1.setTowerTypeName("zx");
-        tower1.setTowerNumber("#4");
-        tower1.setLatitude(36.0972f);
-        tower1.setLongitude(117.16058f);
+        tower1.setTowerNumber("#8");
+        tower1.setLatitude(39.3810467);
+        tower1.setLongitude(111.192265);
         towerLists.add(tower1);
 
-//        tower1 = new TowerPoint();
-//        tower1.setAltitude(55.5f);
-//        tower1.setTowerNum("#2");
-//        tower1.setTowerTypeName("zx");
-//        tower1.setTowerNumber("#3");
-//        tower1.setLatitude(36.10067f);
-//        tower1.setLongitude(117.15577f);
-//        towerLists.add(tower1);
+//                tower1 = new TowerPoint();
+//                tower1.setAltitude(50f);
+//                tower1.setId("ghghghghghghghf");
+//                tower1.setTowerNum("#9");
+//                tower1.setTowerTypeName("zx");
+//                tower1.setTowerNumber("#9");
+//                tower1.setLatitude(39.3796983);
+//                tower1.setLongitude(111.197075);
+//                towerLists.add(tower1);
 //
-//        tower1 = new TowerPoint();
-//        tower1.setAltitude(54.5f);
-//        tower1.setTowerNum("#3");
-//        tower1.setTowerTypeName("nz");
-//        tower1.setTowerNumber("#2");
-//        tower1.setLatitude(36.10067f);
-//        tower1.setLongitude(117.1522f);
-//        towerLists.add(tower1);
-//
-//        tower1.setAltitude(53.5f);
-//        tower1.setTowerNum("#4");
-//        tower1.setTowerTypeName("zx");
-//        tower1.setTowerNumber("#1");
-//        tower1.setLatitude(36.10194f);
-//        tower1.setLongitude(117.14923f);
-//        towerLists.add(tower1);
-//        //loadTower(towerLists);
-//
-//
-//        List<TowerPoint> mPointList = new ArrayList<TowerPoint>();
-//        mPointList = loadTower(towerLists);
-//        System.out.println("航点个数="+mPointList.size());
-//        System.out.println("航点号："+mPointList.get(0).getId()+",随机塔号="+mPointList.get(0).getTowerNum()+",塔号="+mPointList.get(0).getTowerNumber()+",塔类型="+mPointList.get(0).getTowerTypeName()+",高度="+mPointList.get(0).getAltitude()+",经度="+mPointList.get(0).getLongitude()+"，纬度="+mPointList.get(0).getLatitude());
-//        System.out.println("航点号："+mPointList.get(1).getId()+",随机塔号="+mPointList.get(1).getTowerNum()+",塔号="+mPointList.get(1).getTowerNumber()+",塔类型="+mPointList.get(1).getTowerTypeName()+",高度="+mPointList.get(1).getAltitude()+",经度="+mPointList.get(1).getLongitude()+"，纬度="+mPointList.get(1).getLatitude());
-//        System.out.println(getDistance(36.686488686,117.12664155,36.686496016,117.126449634));
-//        System.out.println(getDistance(36.686488686,117.12664155,36.68648727,117.12664053));
-//        System.out.println(getDistance(36.686511779,117.12646928,36.68650194,117.12666014));
+//                tower1 = new TowerPoint();
+//                tower1.setId("vbvxcbvxcbvxcbvxbv");
+//                tower1.setAltitude(50f);
+//                tower1.setTowerNum("#10");
+//                tower1.setTowerTypeName("zx");
+//                tower1.setTowerNumber("#10");
+//                tower1.setLatitude(39.3788);
+//                tower1.setLongitude(111.199075);
+//                towerLists.add(tower1);
 
-        List<TowerPoint> mPointList = new ArrayList<TowerPoint>();
-        mPointList = loadTower1(towerLists);
-        System.out.println("towerLists 大小="+towerLists.size());
-        System.out.println("mPointList 大小="+mPointList.size());
-
-        towerLists.clear();
-        towerLists = mPointList;
-        System.out.println("towerLists 大小="+towerLists.size());
-        System.out.println("mPointList 大小="+mPointList.size());
+        mwaypoints = FileUtils.loadXml(towerLists);
+        System.out.println(mwaypoints.size());
+        for(int i=0;i<mwaypoints.size();i++){
+           System.out.println(mwaypoints.get(i).getId()+","+mwaypoints.get(i).getTowerNum()+","+mwaypoints.get(i).getSeqNumber());
+        }
     }
 
     public void takePhoto(){
@@ -944,7 +926,7 @@ public class HFDManager {
         }else{
             try{
                 object.put("result","start");
-                object.put("tower",wayPointList.get(seqNum).getTowerNum());
+                object.put("tower",wayPointList.get(seqNum).getId());
                 object.put("point",seqNum);
             }catch (Exception e){
                 object = null;
