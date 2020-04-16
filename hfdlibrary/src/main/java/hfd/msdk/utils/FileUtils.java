@@ -149,9 +149,9 @@ public class FileUtils {
         List<WayPoint> listMarkPoint = new ArrayList<WayPoint>();
 //        List<WayPoint> tempMarkPoint = new ArrayList<WayPoint>();
 //        List<WayPoint> tempMarkPoint1 = new ArrayList<WayPoint>();
-        String towerNames = "#";
+        String towerNames = "";
         for(int i=0;i<towerList.size();i++) {
-            towerNames = towerNames+towerList.get(i).getTowerNum().substring(1);
+            towerNames = towerNames+towerList.get(i).getTowerNum();
         }
         System.out.println(towerNames);
         try {

@@ -9,9 +9,6 @@ import java.util.List;
 
 import hfd.msdk.model.WayPoint;
 
-import static hfd.msdk.model.IConstants.loadTowerId;
-import static hfd.msdk.model.IConstants.loadTowerNum;
-
 public class MySaxHandler extends DefaultHandler{
 
     private List<WayPoint> wayPoint;
@@ -51,13 +48,13 @@ public class MySaxHandler extends DefaultHandler{
      */
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
-        
+
         if("Point".equals(pointName)&&tagName != null) {
             String data = new String(ch, start, length);
             if ("id".equals(tagName))
-                currentPoint.setId(loadTowerId);
+                currentPoint.setId(data);
             else if ("towerNum".equals(tagName))
-                currentPoint.setTowerNum(loadTowerNum);
+                currentPoint.setTowerNum(data);
             else if ("type".equals(tagName))
                 currentPoint.setPointType(Integer.parseInt(data));
             else if ("variety".equals(tagName))
