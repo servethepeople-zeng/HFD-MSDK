@@ -156,7 +156,7 @@ public class HFDManager {
     private int battery1 = 0, battery2 = 0;
     private String missonName = "";
     private Timer timer;
-    private int mtowerNum = 0,mseqNum = 0,mlatitude = 0,mlongtidude = 0,maltitude = 0,mtoward = 0, mpitch = 0,mangle = 0;
+    private int mtowerNum = 0, mseqNum = 0, mlatitude = 0, mlongtidude = 0, maltitude = 0, mtoward = 0, mpitch = 0, mangle = 0, atotal = 0;
     private KeyListener getDataListener = new KeyListener() {
         @Override
         public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
@@ -262,7 +262,7 @@ public class HFDManager {
                                                                                             FileUtils.writeLogFile(1, "线侧=" + (data[42] & 0x0FF));
                                                                                             if ((data[42] & 0x0FF) == wayPointList.get(pointNum).getSide()) {
                                                                                                 //对比识别点总数量
-                                                                                                int atotal = 0;
+                                                                                                atotal = 0;
                                                                                                 atotal |= (data[43] & 0xFF);
                                                                                                 atotal |= (data[44] & 0xFF) << 8;
                                                                                                 atotal |= (data[45] & 0xFF) << 16;
@@ -298,7 +298,7 @@ public class HFDManager {
                                             dnum |= (data[10] & 0xFF) << 24;
                                             postWaypoint(3, dnum);
                                         }
-                                    }else if("66".equals(Integer.toHexString(data[5] & 0x0FF))){
+                                    } else if ("66".equals(Integer.toHexString(data[5] & 0x0FF))) {
                                         createMAVLink(13, 0);
                                     }
                                 } else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
@@ -1143,11 +1143,11 @@ public class HFDManager {
                 calMinute = cal.get(Calendar.MINUTE);
                 calSecond = cal.get(Calendar.SECOND);
                 calibration.c_year = calYear;
-                calibration.c_month = (byte)calMonth;
-                calibration.c_day = (byte)calDay;
-                calibration.c_hour = (byte)calHour;
-                calibration.c_minute = (byte)calMinute;
-                calibration.c_second = (byte)calSecond;
+                calibration.c_month = (byte) calMonth;
+                calibration.c_day = (byte) calDay;
+                calibration.c_hour = (byte) calHour;
+                calibration.c_minute = (byte) calMinute;
+                calibration.c_second = (byte) calSecond;
                 packet = calibration.pack();
                 packet.generateCRC();
                 byte[] calibrationByte = packet.encodePacket();
