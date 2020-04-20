@@ -11,6 +11,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -53,6 +54,7 @@ import hfd.msdk.mavlink.msg_picture_press;
 import hfd.msdk.mavlink.msg_picture_zoom;
 import hfd.msdk.mavlink.msg_radio_end;
 import hfd.msdk.mavlink.msg_radio_start;
+import hfd.msdk.mavlink.msg_time_calibration;
 import hfd.msdk.mavlink.msg_waypoint_power_fail;
 import hfd.msdk.mavlink.msg_waypoint_upload;
 import hfd.msdk.model.TowerPoint;
@@ -117,6 +119,12 @@ import static hfd.msdk.model.IConstants.TowHor;
 import static hfd.msdk.model.IConstants.TowVer;
 import static hfd.msdk.model.IConstants.UVC_Horizontal_angle;
 import static hfd.msdk.model.IConstants.UVC_Vertical_angle;
+import static hfd.msdk.model.IConstants.calDay;
+import static hfd.msdk.model.IConstants.calHour;
+import static hfd.msdk.model.IConstants.calMinute;
+import static hfd.msdk.model.IConstants.calMonth;
+import static hfd.msdk.model.IConstants.calSecond;
+import static hfd.msdk.model.IConstants.calYear;
 import static hfd.msdk.model.IConstants.latLng;
 import static hfd.msdk.utils.Helper.BytesToHexString;
 import static hfd.msdk.utils.PointUtils.mulTGeneratePoints;
@@ -125,32 +133,190 @@ import static hfd.msdk.utils.PointUtils.twoTGeneratePoints;
 
 public class HFDManager {
 
-    private static final String TAG = HFDManager.class.getSimpleName()+"1";
-    //获取飞机
-    private Aircraft aircraft = null;
+    private static final String TAG = HFDManager.class.getSimpleName() + "1";
     public static FlightController flightController;
-    private static DJIKey getDataKey, sendDataKey;
-    private CommonCallbacks.CompletionCallbackWith  mDJICompletionCallbackc;
-    private int getHomeFlag = 0, pointNum = 0;
-    public static MessServer  messServer;
-    private static JSONObject object;
+    public static MessServer messServer;
     public static int logLevelType = 0;
-    private LatLng liveLatLng = new LatLng(latLng.latitude, latLng.longitude);
-    private int gcMode = 2,qZoom = 6,realSeq = 0;
     public static List<TowerPoint> backPointList = new ArrayList<TowerPoint>();
     public static List<TowerPoint> tempPointList = new ArrayList<TowerPoint>();
+    public static FlightControllerState mFControlState;
+    private static DJIKey getDataKey, sendDataKey;
+    private static JSONObject object;
+    public List<WayPoint> wayPointList;
+    //获取飞机
+    private Aircraft aircraft = null;
+    private CommonCallbacks.CompletionCallbackWith mDJICompletionCallbackc;
+    private int getHomeFlag = 0, pointNum = 0;
+    private LatLng liveLatLng = new LatLng(latLng.latitude, latLng.longitude);
+    private int gcMode = 2, qZoom = 6, realSeq = 0;
     private TowerPoint realPoint = new TowerPoint();
     private WaypointMission mission;
     private WaypointMissionOperator waypointMissionOperator;
-    private float currentAltidude = 0,compassData = 0;
+    private float currentAltidude = 0, compassData = 0;
     private int battery1 = 0, battery2 = 0;
     private String missonName = "";
-    public List<WayPoint> wayPointList;
     private Timer timer;
-    public static FlightControllerState mFControlState;
+    private int mtowerNum = 0,mseqNum = 0,mlatitude = 0,mlongtidude = 0,maltitude = 0,mtoward = 0, mpitch = 0,mangle = 0;
+    private KeyListener getDataListener = new KeyListener() {
+        @Override
+        public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
+            if (newValue instanceof byte[]) {
+                byte[] data = (byte[]) newValue;
+                //Log.d("receivedata", "HFD receive data success! " + BytesToHexString(data, data.length));
+                FileUtils.writeLogFile(1, "receive data success:" + Helper.byte2hex(data));
+                if (data.length > 7) {
+                    if ("fd".equals(Integer.toHexString(data[0] & 0x0FF))) {
+                        if ("14".equals(Integer.toHexString(data[2] & 0x0FF))) {
+                            if ("ff".equals(Integer.toHexString(data[3] & 0x0FF))) {
+                                if ("be".equals(Integer.toHexString(data[4] & 0x0FF))) {
+                                    if ("47".equals(Integer.toHexString(data[5] & 0x0FF))) {
+                                        if ("1".equals(Integer.toHexString(data[6] & 0x0FF))) {
+                                            if (data.length >= 47) {
+                                                //对比塔号
+                                                mtowerNum = 0;
+                                                mtowerNum |= (data[7] & 0xFF);
+                                                mtowerNum |= (data[8] & 0xFF) << 8;
+                                                mtowerNum |= (data[9] & 0xFF) << 16;
+                                                mtowerNum |= (data[10] & 0xFF) << 24;
+                                                //Log.d("uploadfile", "wayPointList 大小=" + wayPointList.size() + ",pointNum=" + pointNum);
+                                                FileUtils.writeLogFile(1, "wayPointList 大小=" + wayPointList.size() + ",pointNum=" + pointNum);
+                                                //Log.d("uploadfile", "塔号=" + mtowerNum);
+                                                if (mtowerNum == Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1))) {
+                                                    //对比点类型
+                                                    //Log.d("uploadfile", "点类型=" + (data[11] & 0x0FF));
+                                                    FileUtils.writeLogFile(1, "点类型=" + (data[11] & 0x0FF));
+                                                    if ((data[11] & 0x0FF) == wayPointList.get(pointNum).getPointType()) {
+                                                        //对比识别点属性
+                                                        //Log.d("uploadfile", "识别点属性=" + (data[12] & 0x0FF));
+                                                        FileUtils.writeLogFile(1, "识别点属性=" + (data[12] & 0x0FF));
+                                                        if ((data[12] & 0x0FF) == wayPointList.get(pointNum).getVariety()) {
+                                                            //对比飞行顺序号
+                                                            mseqNum = 0;
+                                                            mseqNum |= (data[13] & 0xFF);
+                                                            mseqNum |= (data[14] & 0xFF) << 8;
+                                                            mseqNum |= (data[15] & 0xFF) << 16;
+                                                            mseqNum |= (data[16] & 0xFF) << 24;
+                                                            //Log.d("uploadfile", "飞行顺序号=" + mseqNum);
+                                                            FileUtils.writeLogFile(1, "飞行顺序号=" + mseqNum);
+                                                            if (mseqNum == pointNum) {
+                                                                //对比纬度
+                                                                mlatitude = 0;
+                                                                mlatitude |= (data[17] & 0xFF);
+                                                                mlatitude |= (data[18] & 0xFF) << 8;
+                                                                mlatitude |= (data[19] & 0xFF) << 16;
+                                                                mlatitude |= (data[20] & 0xFF) << 24;
+                                                                //Log.d("uploadfile", "纬度=" + Float.intBitsToFloat(mlatitude));
+                                                                FileUtils.writeLogFile(1, "纬度=" + Float.intBitsToFloat(mlatitude));
+                                                                if (Float.intBitsToFloat(mlatitude) - wayPointList.get(pointNum).getLatitude() < 0.00001) {
+                                                                    //对比经度
+                                                                    mlongtidude = 0;
+                                                                    mlongtidude |= (data[21] & 0xFF);
+                                                                    mlongtidude |= (data[22] & 0xFF) << 8;
+                                                                    mlongtidude |= (data[23] & 0xFF) << 16;
+                                                                    mlongtidude |= (data[24] & 0xFF) << 24;
+                                                                    //Log.d("uploadfile", "经度=" + Float.intBitsToFloat(mlongtidude));
+                                                                    FileUtils.writeLogFile(1, "经度=" + Float.intBitsToFloat(mlongtidude));
+                                                                    if (Float.intBitsToFloat(mlongtidude) - wayPointList.get(pointNum).getLongitude() < 0.00001) {
+                                                                        //对比高度
+                                                                        maltitude = 0;
+                                                                        maltitude |= (data[25] & 0xFF);
+                                                                        maltitude |= (data[26] & 0xFF) << 8;
+                                                                        maltitude |= (data[27] & 0xFF) << 16;
+                                                                        maltitude |= (data[28] & 0xFF) << 24;
+                                                                        //Log.d("uploadfile", "高度=" + Float.intBitsToFloat(maltitude));
+                                                                        FileUtils.writeLogFile(1, "高度=" + Float.intBitsToFloat(maltitude));
+                                                                        if (Float.intBitsToFloat(maltitude) - wayPointList.get(pointNum).getAltitude() < 0.1) {
+                                                                            //对比机头朝向
+                                                                            mtoward = 0;
+                                                                            mtoward |= (data[29] & 0xFF);
+                                                                            mtoward |= (data[30] & 0xFF) << 8;
+                                                                            mtoward |= (data[31] & 0xFF) << 16;
+                                                                            mtoward |= (data[32] & 0xFF) << 24;
+                                                                            //Log.d("uploadfile", "机头朝向=" + Float.intBitsToFloat(mtoward));
+                                                                            FileUtils.writeLogFile(1, "机头朝向=" + Float.intBitsToFloat(mtoward));
+                                                                            if (Float.intBitsToFloat(mtoward) - wayPointList.get(pointNum).getToward() < 0.1) {
+                                                                                //对比俯仰角
+                                                                                mpitch = 0;
+                                                                                mpitch |= (data[33] & 0xFF);
+                                                                                mpitch |= (data[34] & 0xFF) << 8;
+                                                                                mpitch |= (data[35] & 0xFF) << 16;
+                                                                                mpitch |= (data[36] & 0xFF) << 24;
+                                                                                //Log.d("uploadfile", "俯仰角=" + Float.intBitsToFloat(mpitch));
+                                                                                FileUtils.writeLogFile(1, "俯仰角=" + Float.intBitsToFloat(mpitch));
+                                                                                if (Float.intBitsToFloat(mpitch) - wayPointList.get(pointNum).getApitch() < 0.1) {
+                                                                                    //对比识别夹角
+                                                                                    mangle = 0;
+                                                                                    mangle |= (data[37] & 0xFF);
+                                                                                    mangle |= (data[38] & 0xFF) << 8;
+                                                                                    mangle |= (data[39] & 0xFF) << 16;
+                                                                                    mangle |= (data[40] & 0xFF) << 24;
+                                                                                    //Log.d("uploadfile", "识别夹角=" + Float.intBitsToFloat(mangle));
+                                                                                    FileUtils.writeLogFile(1, "识别夹角=" + Float.intBitsToFloat(mangle));
+                                                                                    if (Float.intBitsToFloat(mangle) - wayPointList.get(pointNum).getAngle() < 0.1) {
+                                                                                        //对比识别端类型
+                                                                                        //Log.d("uploadfile", "识别端类型=" + (data[41] & 0x0FF));
+                                                                                        FileUtils.writeLogFile(1, "识别端类型=" + (data[41] & 0x0FF));
+                                                                                        if ((data[41] & 0x0FF) == wayPointList.get(pointNum).getObject()) {
+                                                                                            //对比线侧
+                                                                                            //Log.d("uploadfile", "线侧=" + (data[42] & 0x0FF));
+                                                                                            FileUtils.writeLogFile(1, "线侧=" + (data[42] & 0x0FF));
+                                                                                            if ((data[42] & 0x0FF) == wayPointList.get(pointNum).getSide()) {
+                                                                                                //对比识别点总数量
+                                                                                                int atotal = 0;
+                                                                                                atotal |= (data[43] & 0xFF);
+                                                                                                atotal |= (data[44] & 0xFF) << 8;
+                                                                                                atotal |= (data[45] & 0xFF) << 16;
+                                                                                                atotal |= (data[46] & 0xFF) << 24;
+                                                                                                //Log.d("uploadfile", "识别点总数量=" + atotal);
+                                                                                                FileUtils.writeLogFile(1, "识别点总数量=" + atotal);
+                                                                                                if (atotal == wayPointList.size())
+                                                                                                    postWaypoint(1, 0);
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
 
+                                                    }
+                                                }
+                                            } else {
+                                                rebackMsg(7, "fail", "接收航点验证数据错误 " + BytesToHexString(data, data.length));
+                                            }
+                                        } else if ("2".equals(Integer.toHexString(data[6] & 0x0FF))) {
+                                            postWaypoint(2, 0);
+                                        } else if ("3".equals(Integer.toHexString(data[6] & 0x0FF))) {
+                                            //Log.d("uploadfile","接收到返回数据 到达航点信息");
+                                            int dnum = 0;
+                                            dnum |= (data[7] & 0xFF);
+                                            dnum |= (data[8] & 0xFF) << 8;
+                                            dnum |= (data[9] & 0xFF) << 16;
+                                            dnum |= (data[10] & 0xFF) << 24;
+                                            postWaypoint(3, dnum);
+                                        }
+                                    }else if("66".equals(Integer.toHexString(data[5] & 0x0FF))){
+                                        createMAVLink(13, 0);
+                                    }
+                                } else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
+                                    //反馈命令处理 以下表示拍照完成
+                                    if ("6".equals(Integer.toHexString(data[5] & 0x0FF))) {
+                                        rebackMsg(1, "success", "call stopGoHome() method success");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-    public HFDManager(MessServer  messServer){
+        }
+    };
+
+    public HFDManager(MessServer messServer) {
         //dji回调函数们
         settingCallback();
         getFlightThread();
@@ -161,10 +327,10 @@ public class HFDManager {
         FileUtils.writeLogFile(0, "HFDManager init success.");
         timer = new Timer();
         WarningTimerTask warningTimerTask = new WarningTimerTask();
-        timer.schedule(warningTimerTask,60000,60000);
+        timer.schedule(warningTimerTask, 60000, 60000);
     }
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
         List<WayPoint> mwaypoints = new ArrayList<WayPoint>();
 
         List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
@@ -201,55 +367,90 @@ public class HFDManager {
 
         mwaypoints = FileUtils.loadXml(towerLists);
         System.out.println(mwaypoints.size());
-        for(int i=0;i<mwaypoints.size();i++){
-           System.out.println(mwaypoints.get(i).getId()+","+mwaypoints.get(i).getTowerNum()+","+mwaypoints.get(i).getSeqNumber());
+        for (int i = 0; i < mwaypoints.size(); i++) {
+            System.out.println(mwaypoints.get(i).getId() + "," + mwaypoints.get(i).getTowerNum() + "," + mwaypoints.get(i).getSeqNumber());
         }
     }
 
-    public void takePhoto(){
-        createMAVLink(1,0);
+    public static List<TowerPoint> loadTower1(List<TowerPoint> towerList) {
+        //FileUtils.writeLogFile(0, "call loadTower() method.");
+        if (towerList.size() == 0) {
+            //sendErrorMessage("杆塔数据为空");
+            return null;
+        } else if (towerList.size() == 1) {
+            //sendErrorMessage("只上传了一个直线塔，生成的航点会在塔的北向和南向，请注意飞行安全！");
+            return oneTGeneratePoints(towerList);
+            //有两个塔
+        } else if (towerList.size() == 2) {
+            return twoTGeneratePoints(towerList);
+        } else {
+            System.out.println("航点个数大于2");
+            return mulTGeneratePoints(towerList);
+        }
+    }
+
+    public static void sendErrorMessage(String mesContent) {
+        try {
+            object.put("errorMsg", mesContent);
+        } catch (Exception e) {
+            object = null;
+        }
+        messServer.setInfomation((byte) 0, object);
+
+        FileUtils.writeLogFile(2, mesContent);
+    }
+
+    public void takePhoto() {
+        createMAVLink(1, 0);
         FileUtils.writeLogFile(0, "call takePhoto() method.");
     }
-    public void takeRecord(int type){
-        if(type  == 0){
-            createMAVLink(2,0);
-        }else if(type == 1){
-            createMAVLink(3,0);
+
+    public void takeRecord(int type) {
+        if (type == 0) {
+            createMAVLink(2, 0);
+        } else if (type == 1) {
+            createMAVLink(3, 0);
         }
         FileUtils.writeLogFile(0, "call takeRecord() method.");
     }
-    public void zooming(int zoomNum){
-        if(zoomNum < 32){
-            createMAVLink(4,zoomNum);
-        }else if(zoomNum == 32){
-            createMAVLink(7,zoomNum);
-        }else if(zoomNum == 33){
-            createMAVLink(8,zoomNum);
-        }else if(zoomNum == 34){
-            createMAVLink(5,zoomNum);
-        }else if(zoomNum == 35){
-            createMAVLink(6,zoomNum);
+
+    public void zooming(int zoomNum) {
+        if (zoomNum < 32) {
+            createMAVLink(4, zoomNum);
+        } else if (zoomNum == 32) {
+            createMAVLink(7, zoomNum);
+        } else if (zoomNum == 33) {
+            createMAVLink(8, zoomNum);
+        } else if (zoomNum == 34) {
+            createMAVLink(5, zoomNum);
+        } else if (zoomNum == 35) {
+            createMAVLink(6, zoomNum);
         }
         FileUtils.writeLogFile(0, "call zooming() method.");
     }
-    public void changeView(int viewType){
-        createMAVLink(9,viewType);
+
+    public void changeView(int viewType) {
+        createMAVLink(9, viewType);
         gcMode = viewType;
         FileUtils.writeLogFile(0, "call changeView() method.");
     }
-    public void getSDStorage(){
-        createMAVLink(10,0);
+
+    public void getSDStorage() {
+        createMAVLink(10, 0);
         FileUtils.writeLogFile(0, "call getSDStorage() method.");
     }
-    public void setMissionName(String missionName){
+
+    public void setMissionName(String missionName) {
         this.missonName = missionName;
 
     }
-    public void returnCenter(){
-        createMAVLink(11,0);
+
+    public void returnCenter() {
+        createMAVLink(11, 0);
         FileUtils.writeLogFile(0, "call returnCenter() method.");
     }
-    public void pointDirection (int xAxis,int yAxis){
+
+    public void pointDirection(int xAxis, int yAxis) {
         int mx = 0;
         int my = 0;
         if (xAxis < 1920 / 2)
@@ -267,23 +468,25 @@ public class HFDManager {
         sendUserData(bytes);
         FileUtils.writeLogFile(0, "call pointDirection() method.");
     }
-    public void frameDirection (int xAxis,int yAxis,int frameLength){
+
+    public void frameDirection(int xAxis, int yAxis, int frameLength) {
         MAVLinkPacket packet = new MAVLinkPacket();
         msg_YT_sdegree rect = new msg_YT_sdegree(packet);
-        rect.zoomValue = (byte)getVirtualZoom(frameLength);
+        rect.zoomValue = (byte) getVirtualZoom(frameLength);
         //以将屏幕中心为坐标系零点，计算框的中心坐标
-        int coordinateX = (2*xAxis+frameLength-1920)/2;
-        int coordinateY = (1080-2*yAxis-9*frameLength/16)/2;
+        int coordinateX = (2 * xAxis + frameLength - 1920) / 2;
+        int coordinateY = (1080 - 2 * yAxis - 9 * frameLength / 16) / 2;
         //Log.e("画框命令传输", "wnatural："+getDegree(1,(float)coordinateX/(float)viewWidth)+",hnatural:"+getDegree(2,(float)coordinateY/(float)viewHeight));
-        rect.wnatural = getDegree(1,(float)coordinateX/(float)1920);
-        rect.hnatural = getDegree(2,(float)coordinateY/(float)1080);
+        rect.wnatural = getDegree(1, (float) coordinateX / (float) 1920);
+        rect.hnatural = getDegree(2, (float) coordinateY / (float) 1080);
         packet = rect.pack();
         packet.generateCRC();
         byte[] bytes = packet.encodePacket();
         sendUserData(bytes);
         FileUtils.writeLogFile(0, "call frameDirection() method.");
     }
-    public void moveDirection (float xDegree,float yDegree){
+
+    public void moveDirection(float xDegree, float yDegree) {
         MAVLinkPacket packet = new MAVLinkPacket();
         msg_YT_degree degree = new msg_YT_degree(packet);
         degree.wnatural = xDegree;
@@ -294,77 +497,81 @@ public class HFDManager {
         sendUserData(bytes);
         FileUtils.writeLogFile(0, "call moveDirection() method.");
     }
-    public void startTakeOff (){
-        if(flightController == null) {
+
+    public void startTakeOff() {
+        if (flightController == null) {
             sendErrorMessage("无法获取飞机");
             //flightController.startTakeoff();
-        }else{
+        } else {
             flightController.startTakeoff(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
-                        rebackMsg(3,"success","call startTakeOff() method success");
+                        rebackMsg(3, "success", "call startTakeOff() method success");
                     } else {
-                        rebackMsg(3,"自动起飞失败，请查看飞机状态","call startTakeOff() method error message is "+djiError.getDescription());
-                    }
-                }
-            });
-        }
-    }
-    public void cancelTakeOff (){
-        if(flightController == null) {
-            sendErrorMessage("无法获取飞机");
-            //flightController.startTakeoff();
-        }else{
-            flightController.cancelTakeoff(new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    if (djiError == null) {
-                        rebackMsg(4,"success","call cancelTakeOff() method success");
-                    } else {
-                        rebackMsg(4,"停止自动起飞失败，请查看飞机状态","call cancelTakeOff() method error message is "+djiError.getDescription());
-                    }
-                }
-            });
-        }
-    }
-    public void startLanding (){
-        if(flightController == null) {
-            sendErrorMessage("无法获取飞机");
-            //flightController.startTakeoff();
-        }else{
-            flightController.startLanding(new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    if (djiError == null) {
-                        rebackMsg(5,"success","call startLanding() method success");
-                    } else {
-                        rebackMsg(5,"自动降落失败，请查看飞机状态","call startLanding() method error message is "+djiError.getDescription());
-                    }
-                }
-            });
-        }
-    }
-    public void cancelLanding (){
-        if(flightController == null) {
-            sendErrorMessage("无法获取飞机");
-            //flightController.startTakeoff();
-        }else{
-            flightController.cancelLanding(new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    if (djiError == null) {
-                        rebackMsg(6,"success","call cancelLanding() method success");
-                    } else {
-                        rebackMsg(6,"停止自动降落失败，请查看飞机状态","call cancelLanding() method error message is "+djiError.getDescription());
+                        rebackMsg(3, "自动起飞失败，请查看飞机状态", "call startTakeOff() method error message is " + djiError.getDescription());
                     }
                 }
             });
         }
     }
 
-    public List<WayPoint> loadTower(List<TowerPoint> towerList){
-        wayPointList  = new ArrayList<WayPoint>();
+    public void cancelTakeOff() {
+        if (flightController == null) {
+            sendErrorMessage("无法获取飞机");
+            //flightController.startTakeoff();
+        } else {
+            flightController.cancelTakeoff(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
+                        rebackMsg(4, "success", "call cancelTakeOff() method success");
+                    } else {
+                        rebackMsg(4, "停止自动起飞失败，请查看飞机状态", "call cancelTakeOff() method error message is " + djiError.getDescription());
+                    }
+                }
+            });
+        }
+    }
+
+    public void startLanding() {
+        if (flightController == null) {
+            sendErrorMessage("无法获取飞机");
+            //flightController.startTakeoff();
+        } else {
+            flightController.startLanding(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
+                        rebackMsg(5, "success", "call startLanding() method success");
+                    } else {
+                        rebackMsg(5, "自动降落失败，请查看飞机状态", "call startLanding() method error message is " + djiError.getDescription());
+                    }
+                }
+            });
+        }
+    }
+
+    public void cancelLanding() {
+        if (flightController == null) {
+            sendErrorMessage("无法获取飞机");
+            //flightController.startTakeoff();
+        } else {
+            flightController.cancelLanding(new CommonCallbacks.CompletionCallback() {
+                @Override
+                public void onResult(DJIError djiError) {
+                    if (djiError == null) {
+                        rebackMsg(6, "success", "call cancelLanding() method success");
+                    } else {
+                        rebackMsg(6, "停止自动降落失败，请查看飞机状态", "call cancelLanding() method error message is " + djiError.getDescription());
+                    }
+                }
+            });
+        }
+    }
+
+    public List<WayPoint> loadTower(List<TowerPoint> towerList) {
+        wayPointList = new ArrayList<WayPoint>();
 //        List<WayPoint> prePointList = new ArrayList<WayPoint>();
 //        List<WayPoint> postPointList = new ArrayList<WayPoint>();
 //        if(towerList.size() == 0){
@@ -380,55 +587,38 @@ public class HFDManager {
 //            System.out.println("航点个数大于2");
 //            return mulTGeneratePoints(towerList);
 //        }
-        if(towerList.size() == 0){
+        if (towerList.size() == 0) {
             sendErrorMessage("杆塔数据为空");
-        }else{
+        } else {
             wayPointList = FileUtils.loadXml(towerList);
         }
         return wayPointList;
     }
 
-    public static List<TowerPoint> loadTower1(List<TowerPoint> towerList){
-        //FileUtils.writeLogFile(0, "call loadTower() method.");
-        if(towerList.size() == 0){
-            //sendErrorMessage("杆塔数据为空");
-            return null;
-        } else if(towerList.size() == 1){
-            //sendErrorMessage("只上传了一个直线塔，生成的航点会在塔的北向和南向，请注意飞行安全！");
-            return oneTGeneratePoints(towerList);
-            //有两个塔
-        }else if(towerList.size()==2){
-            return twoTGeneratePoints(towerList);
-        } else {
-            System.out.println("航点个数大于2");
-            return mulTGeneratePoints(towerList);
-        }
-    }
-
-    public List<TowerPoint> loadMarkPoint(List<TowerPoint> towerList){
+    public List<TowerPoint> loadMarkPoint(List<TowerPoint> towerList) {
         //flightController.startTakeoff();
         FileUtils.writeLogFile(0, "call loadMarkPoint() method.");
         return null;
     }
 
-    public void oneButtonStart(){
+    public void oneButtonStart() {
         MAVLinkPacket packet = new MAVLinkPacket();
-        msg_camera_auto_takepic autoTakepic= new msg_camera_auto_takepic(packet);
-        autoTakepic.autoNum = (byte)1;
+        msg_camera_auto_takepic autoTakepic = new msg_camera_auto_takepic(packet);
+        autoTakepic.autoNum = (byte) 1;
         packet = autoTakepic.pack();
         packet.generateCRC();
         sendUserData(packet.encodePacket());
     }
 
-    public void powerFailure(){
+    public void powerFailure() {
         MAVLinkPacket packet = new MAVLinkPacket();
-        msg_waypoint_power_fail powerFail= new msg_waypoint_power_fail(packet);
+        msg_waypoint_power_fail powerFail = new msg_waypoint_power_fail(packet);
         packet = powerFail.pack();
         packet.generateCRC();
         sendUserData(packet.encodePacket());
     }
 
-    public void uploadPoint(List<WayPoint> upWayPointList){
+    public void uploadPoint(List<WayPoint> upWayPointList) {
 //        List<WayPoint> receivePointList = new ArrayList<>(upWayPointList);
 //        wayPointList = new ArrayList<WayPoint>();
 //        wayPointList.addAll(receivePointList);
@@ -480,119 +670,123 @@ public class HFDManager {
         }
     }
 
-    public void uploadPoint1(List<TowerPoint> towerList){
+    public void uploadPoint1(List<TowerPoint> towerList) {
         backPointList.clear();
         backPointList = towerList;
         realPoint = backPointList.get(realSeq);
         realSeq++;
         mission = createWaypointMission();
         DJIError djiError = waypointMissionOperator.loadMission(mission);
-        if(djiError == null) {
+        if (djiError == null) {
             FileUtils.writeLogFile(0, "start uploadPoint().");
             if (WaypointMissionState.READY_TO_RETRY_UPLOAD.equals(waypointMissionOperator.getCurrentState())
                     || WaypointMissionState.READY_TO_UPLOAD.equals(waypointMissionOperator.getCurrentState())) {
                 waypointMissionOperator.uploadMission(new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
-                        if(djiError == null) {
-                            try{
-                                object.put("result","success");
-                            }catch (Exception e){
+                        if (djiError == null) {
+                            try {
+                                object.put("result", "success");
+                            } catch (Exception e) {
                                 object = null;
                             }
-                            messServer.setInfomation((byte)7,object);
+                            messServer.setInfomation((byte) 7, object);
                             FileUtils.writeLogFile(0, "end uploadPoint()");
-                        }else{
-                            rebackMsg(7,"上传航点到飞机失败", "call uploadPoint() errorMsg is 上传航点到飞机失败");
+                        } else {
+                            rebackMsg(7, "上传航点到飞机失败", "call uploadPoint() errorMsg is 上传航点到飞机失败");
                         }
                     }
                 });
             } else {
-                rebackMsg(7,"飞机尚未准备就绪", "call uploadPoint() errorMsg is 飞机尚未准备就绪");
+                rebackMsg(7, "飞机尚未准备就绪", "call uploadPoint() errorMsg is 飞机尚未准备就绪");
             }
-        }else {
-            rebackMsg(7,"航点出错，请检查航点信息", "call uploadPoint() errorMsg is 航点出错，请检查航点信息");
+        } else {
+            rebackMsg(7, "航点出错，请检查航点信息", "call uploadPoint() errorMsg is 航点出错，请检查航点信息");
         }
     }
 
-    public void startMission(){
+    public void startMission() {
         //flightController.startTakeoff();
         FileUtils.writeLogFile(0, "call startMission() method.");
         if (mission != null) {
-            if(WaypointMissionState.READY_TO_EXECUTE.equals(waypointMissionOperator.getCurrentState())) {
+            if (WaypointMissionState.READY_TO_EXECUTE.equals(waypointMissionOperator.getCurrentState())) {
                 waypointMissionOperator.startMission(new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
-                        if(djiError == null){
-                            try{
-                                object.put("result","start");
-                                object.put("tower",realPoint.getTowerNum());
-                                object.put("point",realPoint.getId());
-                            }catch (Exception e){
+                        if (djiError == null) {
+                            try {
+                                object.put("result", "start");
+                                object.put("tower", realPoint.getTowerNum());
+                                object.put("point", realPoint.getId());
+                            } catch (Exception e) {
                                 object = null;
                             }
-                            messServer.setInfomation((byte)15,object);
+                            messServer.setInfomation((byte) 15, object);
                             FileUtils.writeLogFile(0, "");
-                        }else{
-                            rebackMsg(8,"开始自动飞行失败", "call startMission() errormsg is "+djiError.getDescription());
+                        } else {
+                            rebackMsg(8, "开始自动飞行失败", "call startMission() errormsg is " + djiError.getDescription());
                         }
                     }
                 });
-            }else{
-                rebackMsg(8,"飞行航线飞行状态不对，请重新规划上传航线", "call startMission() 飞行航线飞行状态不对，请重新规划上传航线");
+            } else {
+                rebackMsg(8, "飞行航线飞行状态不对，请重新规划上传航线", "call startMission() 飞行航线飞行状态不对，请重新规划上传航线");
             }
         } else {
-            rebackMsg(8,"航线任务为不能空，请上传航点","call startMission() 航线任务为不能空，请上传航点");
+            rebackMsg(8, "航线任务为不能空，请上传航点", "call startMission() 航线任务为不能空，请上传航点");
         }
     }
-    public void pauseMission(){
+
+    public void pauseMission() {
         FileUtils.writeLogFile(0, "call pauseMission() method.");
         if (waypointMissionOperator == null) {
             waypointMissionOperator = MissionControl.getInstance().getWaypointMissionOperator();
         }
-        if(WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())) {
+        if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())) {
             waypointMissionOperator.pauseMission(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if(djiError==null){
-                        rebackMsg(9,"success","call pauseMission() success now flight state is "+waypointMissionOperator.getCurrentState());
-                    }else{
-                        rebackMsg(9,"暂停航点飞行发送错误","call pauseMission() error message is "+djiError.getDescription());
+                    if (djiError == null) {
+                        rebackMsg(9, "success", "call pauseMission() success now flight state is " + waypointMissionOperator.getCurrentState());
+                    } else {
+                        rebackMsg(9, "暂停航点飞行发送错误", "call pauseMission() error message is " + djiError.getDescription());
                     }
                 }
             });
-        }else{
-            rebackMsg(9,"飞机状态错误，不能执行暂停飞行方法","call pauseMission() 无法执行暂停方法，飞机当前状态为"+waypointMissionOperator.getCurrentState());
+        } else {
+            rebackMsg(9, "飞机状态错误，不能执行暂停飞行方法", "call pauseMission() 无法执行暂停方法，飞机当前状态为" + waypointMissionOperator.getCurrentState());
         }
     }
-    public void resumeMission(){
+
+    public void resumeMission() {
         FileUtils.writeLogFile(0, "call resumeMission() method.");
-        if(WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())) {
+        if (WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())) {
             waypointMissionOperator.resumeMission(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if(djiError==null){
-                        rebackMsg(10,"success","call resumeMission() success now flight state is "+waypointMissionOperator.getCurrentState());
-                    }else{
-                        rebackMsg(10,"继续航点飞行发送错误","call resumeMission() error message is "+djiError.getDescription());
+                    if (djiError == null) {
+                        rebackMsg(10, "success", "call resumeMission() success now flight state is " + waypointMissionOperator.getCurrentState());
+                    } else {
+                        rebackMsg(10, "继续航点飞行发送错误", "call resumeMission() error message is " + djiError.getDescription());
                     }
                 }
             });
-        }else{
-            rebackMsg(10,"飞机状态错误，不能继续航点飞行","call resumeMission() 无法执行继续飞行方法，飞机当前状态为"+waypointMissionOperator.getCurrentState());
+        } else {
+            rebackMsg(10, "飞机状态错误，不能继续航点飞行", "call resumeMission() 无法执行继续飞行方法，飞机当前状态为" + waypointMissionOperator.getCurrentState());
         }
     }
-    public void breakpointMission(){
+
+    public void breakpointMission() {
         FileUtils.writeLogFile(0, "call breakpointMission() method.");
-        if(realSeq<=backPointList.size()) {
+        if (realSeq <= backPointList.size()) {
             if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())) {
                 rebackMsg(11, "success", "call breakpointMission() success now flight state is " + waypointMissionOperator.getCurrentState());
             }
-        }else{
+        } else {
             rebackMsg(11, "跳过杆塔失败，航线飞行已完成", "call breakpointMission() success now flight state is " + waypointMissionOperator.getCurrentState());
         }
     }
-    public void stopMission(){
+
+    public void stopMission() {
         FileUtils.writeLogFile(0, "call stopMission() method.");
 //        if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())
 //                || WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())) {
@@ -611,45 +805,48 @@ public class HFDManager {
 //        }
         createMAVLink(12, 0);
     }
-    public void startGoHome(){
-        if(flightController == null) {
+
+    public void startGoHome() {
+        if (flightController == null) {
             sendErrorMessage("无法获取飞机");
             //flightController.startTakeoff();
-        }else{
+        } else {
             flightController.startGoHome(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
-                        rebackMsg(13,"success","call startGoHome() method success");
+                        rebackMsg(13, "success", "call startGoHome() method success");
                     } else {
-                        rebackMsg(13,"返航，请查看飞机状态","call startGoHome() method error message is "+djiError.getDescription());
+                        rebackMsg(13, "返航，请查看飞机状态", "call startGoHome() method error message is " + djiError.getDescription());
                     }
                 }
             });
         }
     }
-    public void stopGoHome(){
-        if(flightController == null) {
+
+    public void stopGoHome() {
+        if (flightController == null) {
             sendErrorMessage("无法获取飞机");
             //flightController.startTakeoff();
-        }else{
+        } else {
             flightController.cancelGoHome(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {
-                        rebackMsg(14,"success","call stopGoHome() method success");
+                        rebackMsg(14, "success", "call stopGoHome() method success");
                     } else {
-                        rebackMsg(14,"停止返航失败，请查看飞机状态","call stopGoHome() method error message is "+djiError.getDescription());
+                        rebackMsg(14, "停止返航失败，请查看飞机状态", "call stopGoHome() method error message is " + djiError.getDescription());
                     }
                 }
             });
         }
     }
-    public JSONObject getFlightData(){
+
+    public JSONObject getFlightData() {
         FileUtils.writeLogFile(0, "call getFlightData() method.");
         JSONObject dataObject = new JSONObject();
         try {
-            if(flightController == null) {
+            if (flightController == null) {
                 sendErrorMessage("无法获取飞机");
                 dataObject.put("speed", "0");
                 dataObject.put("altitude", "0");
@@ -658,7 +855,7 @@ public class HFDManager {
                 dataObject.put("battery1", "0");
                 dataObject.put("battery2", "0");
                 dataObject.put("compass", "0");
-            }else {
+            } else {
                 aircraft.getBatteries().get(0).setStateCallback(new BatteryState.Callback() {
                     @Override
                     public void onUpdate(BatteryState batteryState) {
@@ -675,28 +872,28 @@ public class HFDManager {
                 float speedx = flightController.getState().getVelocityX();
                 float speedy = flightController.getState().getVelocityY();
                 float speedz = flightController.getState().getVelocityZ();
-                float speed = (float)Math.sqrt(Math.pow(speedx,2) + Math.pow(speedx,2) + Math.pow(speedz,2));
-                dataObject.put("speed", speed+"");
-                dataObject.put("altitude", ""+currentAltidude);
-                dataObject.put("longitude", "0"+liveLatLng.longitude);
-                dataObject.put("latitude", "0"+liveLatLng.latitude);
+                float speed = (float) Math.sqrt(Math.pow(speedx, 2) + Math.pow(speedx, 2) + Math.pow(speedz, 2));
+                dataObject.put("speed", speed + "");
+                dataObject.put("altitude", "" + currentAltidude);
+                dataObject.put("longitude", "0" + liveLatLng.longitude);
+                dataObject.put("latitude", "0" + liveLatLng.latitude);
                 dataObject.put("battery1", battery1);
                 dataObject.put("battery2", battery2);
                 dataObject.put("compass", compassData);
             }
         } catch (JSONException e) {
             sendErrorMessage("程序异常");
-            FileUtils.writeLogFile(2, "call getFlightData() error is "+e.getMessage());
+            FileUtils.writeLogFile(2, "call getFlightData() error is " + e.getMessage());
         }
         return dataObject;
     }
 
-    public void setInspectionDir(int h,int v){
+    public void setInspectionDir(int h, int v) {
         TowHor = h;
         TowVer = v;
     }
 
-    public void setLogLevel(int mLogLevel){
+    public void setLogLevel(int mLogLevel) {
         logLevelType = mLogLevel;
     }
 
@@ -706,13 +903,13 @@ public class HFDManager {
                 Log.d(TAG, "getFlightThread");
                 while (true) {
                     try {
-                        if(aircraft != null && flightController != null) {
+                        if (aircraft != null && flightController != null) {
                             //Log.d("aircraft is", "aircraft"+aircraft);
                             //获取home点
                             //Log.d("aircraft home is", "getHomeFlag"+getHomeFlag);
-                            if(getHomeFlag ==0){
+                            if (getHomeFlag == 0) {
                                 flightController.getHomeLocation(mDJICompletionCallbackc);
-                            }else {
+                            } else {
                                 //获取飞机gps信息模块代码
                                 flightController.setStateCallback(new FlightControllerState.Callback() {
                                     @Override
@@ -726,7 +923,7 @@ public class HFDManager {
                             }
                             compassData = flightController.getCompass().getHeading();
                             Thread.sleep(1000);
-                        }else{
+                        } else {
                             aircraft = (Aircraft) DJISDKManager.getInstance().getProduct();
                             flightController = aircraft.getFlightController();
                             //Log.d("aircraft is", "aircraft"+aircraft);
@@ -744,8 +941,8 @@ public class HFDManager {
 
     private void initDJIkey() {
         Log.d(TAG, "initDJIkey");
-        getDataKey = PayloadKey.create(PayloadKey.GET_DATA_FROM_PAYLOAD,0);
-        sendDataKey = PayloadKey.create(PayloadKey.SEND_DATA_TO_PAYLOAD,0);
+        getDataKey = PayloadKey.create(PayloadKey.GET_DATA_FROM_PAYLOAD, 0);
+        sendDataKey = PayloadKey.create(PayloadKey.SEND_DATA_TO_PAYLOAD, 0);
 
         if (KeyManager.getInstance() != null) {
             KeyManager.getInstance().addListener(getDataKey, getDataListener);
@@ -753,153 +950,10 @@ public class HFDManager {
 
     }
 
-    private KeyListener getDataListener = new KeyListener() {
-        @Override
-        public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
-            if (newValue instanceof byte[]) {
-                byte[] data = (byte[]) newValue;
-                Log.d("receivedata","HFD receive data success! " + BytesToHexString(data, data.length));
-                if(data.length>7) {
-                    if ("fd".equals(Integer.toHexString(data[0] & 0x0FF))) {
-                        if ("14".equals(Integer.toHexString(data[2] & 0x0FF))) {
-                            if ("ff".equals(Integer.toHexString(data[3] & 0x0FF))) {
-                                if ("be".equals(Integer.toHexString(data[4] & 0x0FF))) {
-                                    if("47".equals(Integer.toHexString(data[5] & 0x0FF))){
-                                        if("1".equals(Integer.toHexString(data[6] & 0x0FF))) {
-                                            if (data.length >= 47) {
-                                                //对比塔号
-                                                int mtowerNum = 0;
-                                                mtowerNum |= (data[7] & 0xFF);
-                                                mtowerNum |= (data[8] & 0xFF) << 8;
-                                                mtowerNum |= (data[9] & 0xFF) << 16;
-                                                mtowerNum |= (data[10] & 0xFF) << 24;
-                                                Log.d("uploadfile", "wayPointList 大小=" + wayPointList.size()+",pointNum="+pointNum);
-                                                Log.d("uploadfile", "塔号=" + mtowerNum);
-                                                if (mtowerNum == Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1))) {
-                                                    //对比点类型
-                                                    Log.d("uploadfile", "点类型=" + (data[11] & 0x0FF));
-                                                    if ((data[11] & 0x0FF) == wayPointList.get(pointNum).getPointType()) {
-                                                        //对比识别点属性
-                                                        Log.d("uploadfile", "识别点属性=" + (data[12] & 0x0FF));
-                                                        if ((data[12] & 0x0FF) == wayPointList.get(pointNum).getVariety()) {
-                                                            //对比飞行顺序号
-                                                            int mseqNum = 0;
-                                                            mseqNum |= (data[13] & 0xFF);
-                                                            mseqNum |= (data[14] & 0xFF) << 8;
-                                                            mseqNum |= (data[15] & 0xFF) << 16;
-                                                            mseqNum |= (data[16] & 0xFF) << 24;
-                                                            Log.d("uploadfile", "飞行顺序号=" + mseqNum);
-                                                            if (mseqNum == pointNum) {
-                                                                //对比纬度
-                                                                int mlatitude = 0;
-                                                                mlatitude |= (data[17] & 0xFF);
-                                                                mlatitude |= (data[18] & 0xFF) << 8;
-                                                                mlatitude |= (data[19] & 0xFF) << 16;
-                                                                mlatitude |= (data[20] & 0xFF) << 24;
-                                                                Log.d("uploadfile", "纬度=" + Float.intBitsToFloat(mlatitude));
-                                                                if (Float.intBitsToFloat(mlatitude) - wayPointList.get(pointNum).getLatitude() < 0.00001) {
-                                                                    //对比经度
-                                                                    int mlongtidude = 0;
-                                                                    mlongtidude |= (data[21] & 0xFF);
-                                                                    mlongtidude |= (data[22] & 0xFF) << 8;
-                                                                    mlongtidude |= (data[23] & 0xFF) << 16;
-                                                                    mlongtidude |= (data[24] & 0xFF) << 24;
-                                                                    Log.d("uploadfile", "经度=" + Float.intBitsToFloat(mlongtidude));
-                                                                    if (Float.intBitsToFloat(mlongtidude) - wayPointList.get(pointNum).getLongitude() < 0.00001) {
-                                                                        //对比高度
-                                                                        int maltitude = 0;
-                                                                        maltitude |= (data[25] & 0xFF);
-                                                                        maltitude |= (data[26] & 0xFF) << 8;
-                                                                        maltitude |= (data[27] & 0xFF) << 16;
-                                                                        maltitude |= (data[28] & 0xFF) << 24;
-                                                                        Log.d("uploadfile", "高度=" + Float.intBitsToFloat(maltitude));
-                                                                        if (Float.intBitsToFloat(maltitude) - wayPointList.get(pointNum).getAltitude() < 0.1) {
-                                                                            //对比机头朝向
-                                                                            int mtoward = 0;
-                                                                            mtoward |= (data[29] & 0xFF);
-                                                                            mtoward |= (data[30] & 0xFF) << 8;
-                                                                            mtoward |= (data[31] & 0xFF) << 16;
-                                                                            mtoward |= (data[32] & 0xFF) << 24;
-                                                                            Log.d("uploadfile", "机头朝向=" + Float.intBitsToFloat(mtoward));
-                                                                            if (Float.intBitsToFloat(mtoward) - wayPointList.get(pointNum).getToward() < 0.1) {
-                                                                                //对比俯仰角
-                                                                                int mpitch = 0;
-                                                                                mpitch |= (data[33] & 0xFF);
-                                                                                mpitch |= (data[34] & 0xFF) << 8;
-                                                                                mpitch |= (data[35] & 0xFF) << 16;
-                                                                                mpitch |= (data[36] & 0xFF) << 24;
-                                                                                Log.d("uploadfile", "俯仰角=" + Float.intBitsToFloat(mpitch));
-                                                                                if (Float.intBitsToFloat(mpitch) - wayPointList.get(pointNum).getApitch() < 0.1) {
-                                                                                    //对比识别夹角
-                                                                                    int mangle = 0;
-                                                                                    mangle |= (data[37] & 0xFF);
-                                                                                    mangle |= (data[38] & 0xFF) << 8;
-                                                                                    mangle |= (data[39] & 0xFF) << 16;
-                                                                                    mangle |= (data[40] & 0xFF) << 24;
-                                                                                    Log.d("uploadfile", "识别夹角=" + Float.intBitsToFloat(mangle));
-                                                                                    if (Float.intBitsToFloat(mangle) - wayPointList.get(pointNum).getAngle() < 0.1) {
-                                                                                        //对比识别端类型
-                                                                                        Log.d("uploadfile", "识别端类型=" + (data[41] & 0x0FF));
-                                                                                        if ((data[41] & 0x0FF) == wayPointList.get(pointNum).getObject()) {
-                                                                                            //对比线侧
-                                                                                            Log.d("uploadfile", "线侧=" + (data[42] & 0x0FF));
-                                                                                            if ((data[42] & 0x0FF) == wayPointList.get(pointNum).getSide()) {
-                                                                                                //对比识别点总数量
-                                                                                                int atotal = 0;
-                                                                                                atotal |= (data[43] & 0xFF);
-                                                                                                atotal |= (data[44] & 0xFF) << 8;
-                                                                                                atotal |= (data[45] & 0xFF) << 16;
-                                                                                                atotal |= (data[46] & 0xFF) << 24;
-                                                                                                Log.d("uploadfile", "识别点总数量=" + atotal);
-                                                                                                if (atotal == wayPointList.size())
-                                                                                                    postWaypoint(1,0);
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-
-                                                    }
-                                                }
-                                            } else {
-                                                rebackMsg(7, "fail", "接收航点验证数据错误 " + BytesToHexString(data, data.length));
-                                            }
-                                        }else if("2".equals(Integer.toHexString(data[6] & 0x0FF))){
-                                            postWaypoint(2,0);
-                                        }else if("3".equals(Integer.toHexString(data[6] & 0x0FF))){
-                                            //Log.d("uploadfile","接收到返回数据 到达航点信息");
-                                            int dnum = 0;
-                                            dnum |= (data[7] & 0xFF);
-                                            dnum |= (data[8] & 0xFF) << 8;
-                                            dnum |= (data[9] & 0xFF) << 16;
-                                            dnum |= (data[10] & 0xFF) << 24;
-                                            postWaypoint(3,dnum);
-                                        }
-                                    }
-                                }else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
-                                    //反馈命令处理 以下表示拍照完成
-                                    if ("6".equals(Integer.toHexString(data[5] & 0x0FF))) {
-                                        rebackMsg(1,"success","call stopGoHome() method success");
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
-    };
-
-    private void  postWaypoint(int actionType, int seqNum){
-        if(actionType == 1){
+    private void postWaypoint(int actionType, int seqNum) {
+        if (actionType == 1) {
             pointNum++;
-            if(pointNum < wayPointList.size()) {
+            if (pointNum < wayPointList.size()) {
                 MAVLinkPacket packet = new MAVLinkPacket();
                 msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
                 pointUpload.towerNum = Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1));
@@ -918,28 +972,28 @@ public class HFDManager {
                 packet = pointUpload.pack();
                 packet.generateCRC();
                 sendUserData(packet.encodePacket());
-            }else{
+            } else {
                 rebackMsg(7, "success", "上传航点成功");
             }
-        }else if(actionType == 2){
+        } else if (actionType == 2) {
             rebackMsg(7, "fail", "天空端返回收到航点信息有误 ");
-        }else{
-            try{
-                object.put("result","start");
-                object.put("tower",wayPointList.get(seqNum).getId());
-                object.put("point",seqNum);
-            }catch (Exception e){
+        } else {
+            try {
+                object.put("result", "start");
+                object.put("tower", wayPointList.get(seqNum).getId());
+                object.put("point", seqNum);
+            } catch (Exception e) {
                 object = null;
             }
-            messServer.setInfomation((byte)15,object);
+            messServer.setInfomation((byte) 15, object);
             FileUtils.writeLogFile(0, "");
-            if(seqNum == wayPointList.size()-1)
-                rebackMsg(15,"success","巡检结束");
+            if (seqNum == wayPointList.size() - 1)
+                rebackMsg(15, "success", "巡检结束");
         }
     }
 
     //回调函数们
-    private void settingCallback(){
+    private void settingCallback() {
         Log.d(TAG, "settingCallback");
         //获取home点坐标的回调函数
         mDJICompletionCallbackc = new CommonCallbacks.CompletionCallbackWith<LocationCoordinate2D>() {
@@ -948,6 +1002,7 @@ public class HFDManager {
                 //Log.d("aircraft","");
                 getHomeFlag = 1;
             }
+
             @Override
             public void onFailure(DJIError var1) {
                 ToastUtils.setResultToToast(var1.getDescription());
@@ -960,31 +1015,21 @@ public class HFDManager {
         KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
             @Override
             public void onSuccess() {
-                Log.d("senddata",""+ Helper.byte2hex(showData));
-                FileUtils.writeLogFile(1, "senddata success:"+Helper.byte2hex(showData));
+                Log.d("senddata", "" + Helper.byte2hex(showData));
+                FileUtils.writeLogFile(1, "senddata success:" + Helper.byte2hex(showData));
             }
+
             @Override
             public void onFailure(@NonNull DJIError error) {
                 //ToastUtils.setResultToToast("Not found payload device,please restart the app！");
                 //Log.d("senddata",""+Helper.byte2hex(showData));
                 sendErrorMessage("没有发现云台");
-                FileUtils.writeLogFile(1, "senddata fail:"+Helper.byte2hex(showData));
+                FileUtils.writeLogFile(1, "senddata fail:" + Helper.byte2hex(showData));
             }
         }, data);
     }
 
-    public static void sendErrorMessage(String mesContent){
-        try{
-            object.put("errorMsg",mesContent);
-        }catch (Exception e){
-            object = null;
-        }
-        messServer.setInfomation((byte)0,object);
-
-        FileUtils.writeLogFile(2, mesContent);
-    }
-
-    private void createMAVLink(int type,int content) {
+    private void createMAVLink(int type, int content) {
         MAVLinkPacket packet = new MAVLinkPacket();
         switch (type) {
             case 1:
@@ -1011,7 +1056,7 @@ public class HFDManager {
                 break;
             case 4:
                 msg_camera_zoom camera_zoom = new msg_camera_zoom(packet);
-                if(content<6)
+                if (content < 6)
                     content = 6;
                 camera_zoom.type = (byte) content;
                 packet = camera_zoom.pack();
@@ -1052,16 +1097,16 @@ public class HFDManager {
                 break;
             case 9:
                 msg_GC_mode gcMode = new msg_GC_mode(packet);
-                if(content==0){
+                if (content == 0) {
                     gcMode.type = (byte) 01;
                     gcMode.fieldView = (byte) 02;
-                }else if(content == 1){
+                } else if (content == 1) {
                     gcMode.type = (byte) 01;
                     gcMode.fieldView = (byte) 01;
-                }else if(content == 2){
+                } else if (content == 2) {
                     gcMode.type = (byte) 02;
                     gcMode.fieldView = (byte) 02;
-                }else if(content == 3){
+                } else if (content == 3) {
                     gcMode.type = (byte) 02;
                     gcMode.fieldView = (byte) 01;
                 }
@@ -1087,246 +1132,217 @@ public class HFDManager {
                 packet.generateCRC();
                 sendUserData(packet.encodePacket());
                 break;
+            //发送时间校准信息
+            case 13:
+                msg_time_calibration calibration = new msg_time_calibration(packet);
+                Calendar cal = Calendar.getInstance();
+                calYear = cal.get(Calendar.YEAR);
+                calMonth = cal.get(Calendar.MONTH);
+                calDay = cal.get(Calendar.DATE);
+                calHour = cal.get(Calendar.HOUR_OF_DAY);
+                calMinute = cal.get(Calendar.MINUTE);
+                calSecond = cal.get(Calendar.SECOND);
+                calibration.c_year = calYear;
+                calibration.c_month = (byte)calMonth;
+                calibration.c_day = (byte)calDay;
+                calibration.c_hour = (byte)calHour;
+                calibration.c_minute = (byte)calMinute;
+                calibration.c_second = (byte)calSecond;
+                packet = calibration.pack();
+                packet.generateCRC();
+                byte[] calibrationByte = packet.encodePacket();
+                sendUserData(calibrationByte);
+                break;
         }
     }
 
-    public float getDegree(int type,float perWHeight){
+    public float getDegree(int type, float perWHeight) {
         //Log.d("命令msg_YT_degree", "type="+type+",百分比perWHeight="+perWHeight);
         //Log.d("命令msg_YT_degree", "gcM="+gcMode+",qZoom="+qZoom);
         float moveDegree = 0.00f;
         //水平角
-        if(type == 1) {
+        if (type == 1) {
             //广角
             if (gcMode == 0 || gcMode == 2) {
                 //moveDegree = (float)(65.76*perWHeight);
                 //自己测量37.85305 厂商提供35.8
                 //moveDegree = (float)(37.85305*perWHeight);
-                moveDegree = UVC_Horizontal_angle*perWHeight;
+                moveDegree = UVC_Horizontal_angle * perWHeight;
             } else {
-                if (qZoom <= 6){
-                    moveDegree = Qx30U_Zoom_H6*perWHeight;
-                }
-                else if (qZoom == 7){
-                    moveDegree = Qx30U_Zoom_H7*perWHeight;
-                }
-                else if (qZoom == 8){
-                    moveDegree = Qx30U_Zoom_H8*perWHeight;
-                }
-                else if (qZoom == 9){
-                    moveDegree = Qx30U_Zoom_H9*perWHeight;
-                }
-                else if (qZoom == 10){
-                    moveDegree = Qx30U_Zoom_H10*perWHeight;
-                }
-                else if (qZoom == 11){
-                    moveDegree = Qx30U_Zoom_H11*perWHeight;
-                }
-                else if (qZoom == 12){
-                    moveDegree = Qx30U_Zoom_H12*perWHeight;
-                }
-                else if (qZoom == 13){
-                    moveDegree = Qx30U_Zoom_H13*perWHeight;
-                }
-                else if (qZoom == 14){
-                    moveDegree = Qx30U_Zoom_H14*perWHeight;
-                }
-                else if (qZoom == 15){
-                    moveDegree = Qx30U_Zoom_H15*perWHeight;
-                }
-                else if (qZoom == 16){
-                    moveDegree = Qx30U_Zoom_H16*perWHeight;
-                }
-                else if (qZoom == 17){
-                    moveDegree = Qx30U_Zoom_H17*perWHeight;
-                }
-                else if (qZoom == 18){
-                    moveDegree = Qx30U_Zoom_H18*perWHeight;
-                }
-                else if (qZoom == 19){
-                    moveDegree = Qx30U_Zoom_H19*perWHeight;
-                }
-                else if (qZoom == 20){
-                    moveDegree = Qx30U_Zoom_H20*perWHeight;
-                }
-                else if (qZoom == 21){
-                    moveDegree = Qx30U_Zoom_H21*perWHeight;
-                }
-                else if (qZoom == 22){
-                    moveDegree = Qx30U_Zoom_H22*perWHeight;
-                }
-                else if (qZoom == 23){
-                    moveDegree = Qx30U_Zoom_H23*perWHeight;
-                }
-                else if (qZoom == 24){
-                    moveDegree = Qx30U_Zoom_H24*perWHeight;
-                }
-                else if (qZoom == 25){
-                    moveDegree = Qx30U_Zoom_H25*perWHeight;
-                }
-                else if (qZoom == 26){
-                    moveDegree = Qx30U_Zoom_H26*perWHeight;
-                }
-                else if (qZoom == 27){
-                    moveDegree = Qx30U_Zoom_H27*perWHeight;
-                }
-                else if (qZoom == 28){
-                    moveDegree = Qx30U_Zoom_H28*perWHeight;
-                }
-                else if (qZoom == 29){
-                    moveDegree = Qx30U_Zoom_H29*perWHeight;
-                }
-                else if (qZoom == 30){
-                    moveDegree = Qx30U_Zoom_H30*perWHeight;
-                }
-                else if (qZoom == 31){
-                    moveDegree = Qx30U_Zoom_H31*perWHeight;
+                if (qZoom <= 6) {
+                    moveDegree = Qx30U_Zoom_H6 * perWHeight;
+                } else if (qZoom == 7) {
+                    moveDegree = Qx30U_Zoom_H7 * perWHeight;
+                } else if (qZoom == 8) {
+                    moveDegree = Qx30U_Zoom_H8 * perWHeight;
+                } else if (qZoom == 9) {
+                    moveDegree = Qx30U_Zoom_H9 * perWHeight;
+                } else if (qZoom == 10) {
+                    moveDegree = Qx30U_Zoom_H10 * perWHeight;
+                } else if (qZoom == 11) {
+                    moveDegree = Qx30U_Zoom_H11 * perWHeight;
+                } else if (qZoom == 12) {
+                    moveDegree = Qx30U_Zoom_H12 * perWHeight;
+                } else if (qZoom == 13) {
+                    moveDegree = Qx30U_Zoom_H13 * perWHeight;
+                } else if (qZoom == 14) {
+                    moveDegree = Qx30U_Zoom_H14 * perWHeight;
+                } else if (qZoom == 15) {
+                    moveDegree = Qx30U_Zoom_H15 * perWHeight;
+                } else if (qZoom == 16) {
+                    moveDegree = Qx30U_Zoom_H16 * perWHeight;
+                } else if (qZoom == 17) {
+                    moveDegree = Qx30U_Zoom_H17 * perWHeight;
+                } else if (qZoom == 18) {
+                    moveDegree = Qx30U_Zoom_H18 * perWHeight;
+                } else if (qZoom == 19) {
+                    moveDegree = Qx30U_Zoom_H19 * perWHeight;
+                } else if (qZoom == 20) {
+                    moveDegree = Qx30U_Zoom_H20 * perWHeight;
+                } else if (qZoom == 21) {
+                    moveDegree = Qx30U_Zoom_H21 * perWHeight;
+                } else if (qZoom == 22) {
+                    moveDegree = Qx30U_Zoom_H22 * perWHeight;
+                } else if (qZoom == 23) {
+                    moveDegree = Qx30U_Zoom_H23 * perWHeight;
+                } else if (qZoom == 24) {
+                    moveDegree = Qx30U_Zoom_H24 * perWHeight;
+                } else if (qZoom == 25) {
+                    moveDegree = Qx30U_Zoom_H25 * perWHeight;
+                } else if (qZoom == 26) {
+                    moveDegree = Qx30U_Zoom_H26 * perWHeight;
+                } else if (qZoom == 27) {
+                    moveDegree = Qx30U_Zoom_H27 * perWHeight;
+                } else if (qZoom == 28) {
+                    moveDegree = Qx30U_Zoom_H28 * perWHeight;
+                } else if (qZoom == 29) {
+                    moveDegree = Qx30U_Zoom_H29 * perWHeight;
+                } else if (qZoom == 30) {
+                    moveDegree = Qx30U_Zoom_H30 * perWHeight;
+                } else if (qZoom == 31) {
+                    moveDegree = Qx30U_Zoom_H31 * perWHeight;
                 }
             }
             //俯仰角
-        }else{
+        } else {
             //广角
             if (gcMode == 0 || gcMode == 2) {
                 //moveDegree = (float)49.32*perWHeight;
                 //自己测量21.34598 厂商提供21.6
                 //moveDegree = (float)21.34598*perWHeight;
-                moveDegree = UVC_Vertical_angle*perWHeight;
+                moveDegree = UVC_Vertical_angle * perWHeight;
             } else {
-                if (qZoom <= 6){
-                    moveDegree = Qx30U_Zoom_V6*perWHeight;
-                }
-                else if (qZoom == 7){
-                    moveDegree = Qx30U_Zoom_V7*perWHeight;
-                }
-                else if (qZoom == 8){
-                    moveDegree = Qx30U_Zoom_V8*perWHeight;
-                }
-                else if (qZoom == 9){
-                    moveDegree = Qx30U_Zoom_V9*perWHeight;
-                }
-                else if (qZoom == 10){
-                    moveDegree = Qx30U_Zoom_V10*perWHeight;
-                }
-                else if (qZoom == 11){
-                    moveDegree = Qx30U_Zoom_V11*perWHeight;
-                }
-                else if (qZoom == 12){
-                    moveDegree = Qx30U_Zoom_V12*perWHeight;
-                }
-                else if (qZoom == 13){
-                    moveDegree = Qx30U_Zoom_V13*perWHeight;
-                }
-                else if (qZoom == 14){
-                    moveDegree = Qx30U_Zoom_V14*perWHeight;
-                }
-                else if (qZoom == 15){
-                    moveDegree = Qx30U_Zoom_V15*perWHeight;
-                }
-                else if (qZoom == 16){
-                    moveDegree = Qx30U_Zoom_V16*perWHeight;
-                }
-                else if (qZoom == 17){
-                    moveDegree = Qx30U_Zoom_V17*perWHeight;
-                }
-                else if (qZoom == 18){
-                    moveDegree = Qx30U_Zoom_V18*perWHeight;
-                }
-                else if (qZoom == 19){
-                    moveDegree = Qx30U_Zoom_V19*perWHeight;
-                }
-                else if (qZoom == 20){
-                    moveDegree = Qx30U_Zoom_V20*perWHeight;
-                }
-                else if (qZoom == 21){
-                    moveDegree = Qx30U_Zoom_V21*perWHeight;
-                }
-                else if (qZoom == 22){
-                    moveDegree = Qx30U_Zoom_V22*perWHeight;
-                }
-                else if (qZoom == 23){
-                    moveDegree = Qx30U_Zoom_V23*perWHeight;
-                }
-                else if (qZoom == 24){
-                    moveDegree = Qx30U_Zoom_V24*perWHeight;
-                }
-                else if (qZoom == 25){
-                    moveDegree = Qx30U_Zoom_V25*perWHeight;
-                }
-                else if (qZoom == 26){
-                    moveDegree = Qx30U_Zoom_V26*perWHeight;
-                }
-                else if (qZoom == 27){
-                    moveDegree = Qx30U_Zoom_V27*perWHeight;
-                }
-                else if (qZoom == 28){
-                    moveDegree = Qx30U_Zoom_V28*perWHeight;
-                }
-                else if (qZoom == 29){
-                    moveDegree = Qx30U_Zoom_V29*perWHeight;
-                }
-                else if (qZoom == 30){
-                    moveDegree = Qx30U_Zoom_V30*perWHeight;
-                }
-                else if (qZoom == 31){
-                    moveDegree = Qx30U_Zoom_V31*perWHeight;
+                if (qZoom <= 6) {
+                    moveDegree = Qx30U_Zoom_V6 * perWHeight;
+                } else if (qZoom == 7) {
+                    moveDegree = Qx30U_Zoom_V7 * perWHeight;
+                } else if (qZoom == 8) {
+                    moveDegree = Qx30U_Zoom_V8 * perWHeight;
+                } else if (qZoom == 9) {
+                    moveDegree = Qx30U_Zoom_V9 * perWHeight;
+                } else if (qZoom == 10) {
+                    moveDegree = Qx30U_Zoom_V10 * perWHeight;
+                } else if (qZoom == 11) {
+                    moveDegree = Qx30U_Zoom_V11 * perWHeight;
+                } else if (qZoom == 12) {
+                    moveDegree = Qx30U_Zoom_V12 * perWHeight;
+                } else if (qZoom == 13) {
+                    moveDegree = Qx30U_Zoom_V13 * perWHeight;
+                } else if (qZoom == 14) {
+                    moveDegree = Qx30U_Zoom_V14 * perWHeight;
+                } else if (qZoom == 15) {
+                    moveDegree = Qx30U_Zoom_V15 * perWHeight;
+                } else if (qZoom == 16) {
+                    moveDegree = Qx30U_Zoom_V16 * perWHeight;
+                } else if (qZoom == 17) {
+                    moveDegree = Qx30U_Zoom_V17 * perWHeight;
+                } else if (qZoom == 18) {
+                    moveDegree = Qx30U_Zoom_V18 * perWHeight;
+                } else if (qZoom == 19) {
+                    moveDegree = Qx30U_Zoom_V19 * perWHeight;
+                } else if (qZoom == 20) {
+                    moveDegree = Qx30U_Zoom_V20 * perWHeight;
+                } else if (qZoom == 21) {
+                    moveDegree = Qx30U_Zoom_V21 * perWHeight;
+                } else if (qZoom == 22) {
+                    moveDegree = Qx30U_Zoom_V22 * perWHeight;
+                } else if (qZoom == 23) {
+                    moveDegree = Qx30U_Zoom_V23 * perWHeight;
+                } else if (qZoom == 24) {
+                    moveDegree = Qx30U_Zoom_V24 * perWHeight;
+                } else if (qZoom == 25) {
+                    moveDegree = Qx30U_Zoom_V25 * perWHeight;
+                } else if (qZoom == 26) {
+                    moveDegree = Qx30U_Zoom_V26 * perWHeight;
+                } else if (qZoom == 27) {
+                    moveDegree = Qx30U_Zoom_V27 * perWHeight;
+                } else if (qZoom == 28) {
+                    moveDegree = Qx30U_Zoom_V28 * perWHeight;
+                } else if (qZoom == 29) {
+                    moveDegree = Qx30U_Zoom_V29 * perWHeight;
+                } else if (qZoom == 30) {
+                    moveDegree = Qx30U_Zoom_V30 * perWHeight;
+                } else if (qZoom == 31) {
+                    moveDegree = Qx30U_Zoom_V31 * perWHeight;
                 }
             }
         }
-        return (float)(Math.round(moveDegree*100))/100;
+        return (float) (Math.round(moveDegree * 100)) / 100;
     }
 
     //根据画的框的大小返回应该变到的zoom值
-    public int getVirtualZoom(int rectX){
+    public int getVirtualZoom(int rectX) {
         int blurZoom = 6;
-        float newAngle = (float)rectX/(float) 1920*UVC_Horizontal_angle;
+        float newAngle = (float) rectX / (float) 1920 * UVC_Horizontal_angle;
 
         //Log.d("画框命令传输", "newAngle："+newAngle);
-        if(newAngle>=Qx30U_Zoom_H19){
-            if(newAngle>Qx30U_Zoom_H8)
+        if (newAngle >= Qx30U_Zoom_H19) {
+            if (newAngle > Qx30U_Zoom_H8)
                 blurZoom = 8;
-            else if(newAngle>Qx30U_Zoom_H9)
+            else if (newAngle > Qx30U_Zoom_H9)
                 blurZoom = 9;
-            else if(newAngle>Qx30U_Zoom_H10)
+            else if (newAngle > Qx30U_Zoom_H10)
                 blurZoom = 10;
-            else if(newAngle>Qx30U_Zoom_H11)
+            else if (newAngle > Qx30U_Zoom_H11)
                 blurZoom = 11;
-            else if(newAngle>Qx30U_Zoom_H12)
+            else if (newAngle > Qx30U_Zoom_H12)
                 blurZoom = 12;
-            else if(newAngle>Qx30U_Zoom_H13)
+            else if (newAngle > Qx30U_Zoom_H13)
                 blurZoom = 13;
-            else if(newAngle>Qx30U_Zoom_H14)
+            else if (newAngle > Qx30U_Zoom_H14)
                 blurZoom = 14;
-            else if(newAngle>Qx30U_Zoom_H15)
+            else if (newAngle > Qx30U_Zoom_H15)
                 blurZoom = 15;
-            else if(newAngle>Qx30U_Zoom_H16)
+            else if (newAngle > Qx30U_Zoom_H16)
                 blurZoom = 16;
-            else if(newAngle>Qx30U_Zoom_H17)
+            else if (newAngle > Qx30U_Zoom_H17)
                 blurZoom = 17;
-            else if(newAngle>Qx30U_Zoom_H18)
+            else if (newAngle > Qx30U_Zoom_H18)
                 blurZoom = 18;
             else
                 blurZoom = 19;
-        }else{
-            if(newAngle>Qx30U_Zoom_H20)
+        } else {
+            if (newAngle > Qx30U_Zoom_H20)
                 blurZoom = 20;
-            else if(newAngle>Qx30U_Zoom_H21)
+            else if (newAngle > Qx30U_Zoom_H21)
                 blurZoom = 21;
-            else if(newAngle>Qx30U_Zoom_H22)
+            else if (newAngle > Qx30U_Zoom_H22)
                 blurZoom = 22;
-            else if(newAngle>Qx30U_Zoom_H23)
+            else if (newAngle > Qx30U_Zoom_H23)
                 blurZoom = 23;
-            else if(newAngle>Qx30U_Zoom_H24)
+            else if (newAngle > Qx30U_Zoom_H24)
                 blurZoom = 24;
-            else if(newAngle>Qx30U_Zoom_H25)
+            else if (newAngle > Qx30U_Zoom_H25)
                 blurZoom = 25;
-            else if(newAngle>Qx30U_Zoom_H26)
+            else if (newAngle > Qx30U_Zoom_H26)
                 blurZoom = 26;
-            else if(newAngle>Qx30U_Zoom_H27)
+            else if (newAngle > Qx30U_Zoom_H27)
                 blurZoom = 27;
-            else if(newAngle>Qx30U_Zoom_H28)
+            else if (newAngle > Qx30U_Zoom_H28)
                 blurZoom = 28;
-            else if(newAngle>Qx30U_Zoom_H29)
+            else if (newAngle > Qx30U_Zoom_H29)
                 blurZoom = 29;
-            else if(newAngle>Qx30U_Zoom_H30)
+            else if (newAngle > Qx30U_Zoom_H30)
                 blurZoom = 30;
             else
                 blurZoom = 31;
@@ -1334,7 +1350,7 @@ public class HFDManager {
         return blurZoom;
     }
 
-    private WaypointMission createWaypointMission(){
+    private WaypointMission createWaypointMission() {
         WaypointMission.Builder builder = new WaypointMission.Builder();
         builder.autoFlightSpeed(5f);
         builder.maxFlightSpeed(10f);
@@ -1351,8 +1367,8 @@ public class HFDManager {
 
         //List<Waypoint> waypointList = new ArrayList<>();
 
-        Waypoint eachWaypoint = new Waypoint(realPoint.getLatitude(),realPoint.getLongitude(), realPoint.getAltitude());
-        eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, (int)realPoint.getToward()));
+        Waypoint eachWaypoint = new Waypoint(realPoint.getLatitude(), realPoint.getLongitude(), realPoint.getAltitude());
+        eachWaypoint.addAction(new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, (int) realPoint.getToward()));
         eachWaypoint.addAction(new WaypointAction(WaypointActionType.STAY, 3000));
         //waypointList.add(eachWaypoint);
         //builder.waypointList(waypointList).waypointCount(waypointList.size());
@@ -1360,58 +1376,59 @@ public class HFDManager {
         return builder.build();
     }
 
-    private void rebackMsg(int type,String rebackContent, String noteLog){
-        try{
-            object.put("result",rebackContent);
-        }catch (Exception e){
+    private void rebackMsg(int type, String rebackContent, String noteLog) {
+        try {
+            object.put("result", rebackContent);
+        } catch (Exception e) {
             object = null;
         }
-        messServer.setInfomation((byte)type,object);
+        messServer.setInfomation((byte) type, object);
         FileUtils.writeLogFile(2, noteLog);
     }
 
-    private JSONObject getWindWarning(){
+    private JSONObject getWindWarning() {
         FileUtils.writeLogFile(0, "call getWindWarning() method.");
         JSONObject dataObject = new JSONObject();
         try {
-            if(flightController != null){
-                if(mFControlState == null){
+            if (flightController != null) {
+                if (mFControlState == null) {
                     mFControlState = flightController.getState();
                 }
                 FlightWindWarning flightWindWarning = mFControlState.getFlightWindWarning();
                 dataObject.put("result", "success");
                 dataObject.put("alarmLevel", flightWindWarning.toString());
-            }else{
+            } else {
                 dataObject.put("result", "fail");
             }
 
         } catch (JSONException e) {
             sendErrorMessage("程序异常");
-            FileUtils.writeLogFile(2, "call getWindWarning() error is "+e.getMessage());
+            FileUtils.writeLogFile(2, "call getWindWarning() error is " + e.getMessage());
         }
         return dataObject;
     }
 
 }
+
 class WarningTimerTask extends TimerTask {
     @Override
-    public void run(){
+    public void run() {
         JSONObject dataObject = new JSONObject();
         try {
-            if(HFDManager.flightController != null){
-                if(HFDManager.mFControlState == null){
+            if (HFDManager.flightController != null) {
+                if (HFDManager.mFControlState == null) {
                     HFDManager.mFControlState = HFDManager.flightController.getState();
                 }
                 FlightWindWarning flightWindWarning = HFDManager.mFControlState.getFlightWindWarning();
                 dataObject.put("result", "success");
                 dataObject.put("alarmLevel", flightWindWarning.toString());
-                HFDManager.messServer.setInfomation((byte)18,dataObject);
-            }else{
-                FileUtils.writeLogFile(2, "flightController is null "+HFDManager.flightController);
+                HFDManager.messServer.setInfomation((byte) 18, dataObject);
+            } else {
+                FileUtils.writeLogFile(2, "flightController is null " + HFDManager.flightController);
             }
 
         } catch (JSONException e) {
-            FileUtils.writeLogFile(2, "timer run error is "+e.getMessage());
+            FileUtils.writeLogFile(2, "timer run error is " + e.getMessage());
         }
     }
 }

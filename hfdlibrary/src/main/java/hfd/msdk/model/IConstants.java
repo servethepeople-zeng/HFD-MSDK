@@ -75,4 +75,6 @@ public class IConstants
 
     public static String loadTowerId = "871cd7ec97e64699a7c80a3e025a97c7";
     public static String loadTowerNum = "#8";
+    public static int calYear = 0, calMonth = 0, calDay = 0, calHour = 0, calMinute = 0, calSecond = 0;
+
 }
