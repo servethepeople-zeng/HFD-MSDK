@@ -142,7 +142,7 @@ public class HFDManager {
     public static FlightControllerState mFControlState;
     private static DJIKey getDataKey, sendDataKey;
     private static JSONObject object;
-    public List<WayPoint> wayPointList;
+    public List<WayPoint> hfdWayPointList = new ArrayList<WayPoint>();
     //获取飞机
     private Aircraft aircraft = null;
     private CommonCallbacks.CompletionCallbackWith mDJICompletionCallbackc;
@@ -163,7 +163,7 @@ public class HFDManager {
             if (newValue instanceof byte[]) {
                 byte[] data = (byte[]) newValue;
                 //Log.d("receivedata", "HFD receive data success! " + BytesToHexString(data, data.length));
-                FileUtils.writeLogFile(1, "receive data success:" + Helper.byte2hex(data));
+                FileUtils.writeLogFile(1, "receive data success1:" + Helper.byte2hex(data));
                 if (data.length > 7) {
                     if ("fd".equals(Integer.toHexString(data[0] & 0x0FF))) {
                         if ("14".equals(Integer.toHexString(data[2] & 0x0FF))) {
@@ -178,18 +178,18 @@ public class HFDManager {
                                                 mtowerNum |= (data[8] & 0xFF) << 8;
                                                 mtowerNum |= (data[9] & 0xFF) << 16;
                                                 mtowerNum |= (data[10] & 0xFF) << 24;
-                                                //Log.d("uploadfile", "wayPointList 大小=" + wayPointList.size() + ",pointNum=" + pointNum);
-                                                FileUtils.writeLogFile(1, "wayPointList 大小=" + wayPointList.size() + ",pointNum=" + pointNum);
+                                                //Log.d("uploadfile", "hfdWayPointList 大小=" + hfdWayPointList.size() + ",pointNum=" + pointNum);
+                                                FileUtils.writeLogFile(1, "hfdWayPointList 大小=" + hfdWayPointList.size() + ",pointNum=" + pointNum);
                                                 //Log.d("uploadfile", "塔号=" + mtowerNum);
-                                                if (mtowerNum == Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1))) {
+                                                if (mtowerNum == Integer.parseInt(hfdWayPointList.get(pointNum).getTowerNum().substring(1))) {
                                                     //对比点类型
                                                     //Log.d("uploadfile", "点类型=" + (data[11] & 0x0FF));
                                                     FileUtils.writeLogFile(1, "点类型=" + (data[11] & 0x0FF));
-                                                    if ((data[11] & 0x0FF) == wayPointList.get(pointNum).getPointType()) {
+                                                    if ((data[11] & 0x0FF) == hfdWayPointList.get(pointNum).getPointType()) {
                                                         //对比识别点属性
                                                         //Log.d("uploadfile", "识别点属性=" + (data[12] & 0x0FF));
                                                         FileUtils.writeLogFile(1, "识别点属性=" + (data[12] & 0x0FF));
-                                                        if ((data[12] & 0x0FF) == wayPointList.get(pointNum).getVariety()) {
+                                                        if ((data[12] & 0x0FF) == hfdWayPointList.get(pointNum).getVariety()) {
                                                             //对比飞行顺序号
                                                             mseqNum = 0;
                                                             mseqNum |= (data[13] & 0xFF);
@@ -207,7 +207,7 @@ public class HFDManager {
                                                                 mlatitude |= (data[20] & 0xFF) << 24;
                                                                 //Log.d("uploadfile", "纬度=" + Float.intBitsToFloat(mlatitude));
                                                                 FileUtils.writeLogFile(1, "纬度=" + Float.intBitsToFloat(mlatitude));
-                                                                if (Float.intBitsToFloat(mlatitude) - wayPointList.get(pointNum).getLatitude() < 0.00001) {
+                                                                if (Float.intBitsToFloat(mlatitude) - hfdWayPointList.get(pointNum).getLatitude() < 0.00001) {
                                                                     //对比经度
                                                                     mlongtidude = 0;
                                                                     mlongtidude |= (data[21] & 0xFF);
@@ -216,7 +216,7 @@ public class HFDManager {
                                                                     mlongtidude |= (data[24] & 0xFF) << 24;
                                                                     //Log.d("uploadfile", "经度=" + Float.intBitsToFloat(mlongtidude));
                                                                     FileUtils.writeLogFile(1, "经度=" + Float.intBitsToFloat(mlongtidude));
-                                                                    if (Float.intBitsToFloat(mlongtidude) - wayPointList.get(pointNum).getLongitude() < 0.00001) {
+                                                                    if (Float.intBitsToFloat(mlongtidude) - hfdWayPointList.get(pointNum).getLongitude() < 0.00001) {
                                                                         //对比高度
                                                                         maltitude = 0;
                                                                         maltitude |= (data[25] & 0xFF);
@@ -225,7 +225,7 @@ public class HFDManager {
                                                                         maltitude |= (data[28] & 0xFF) << 24;
                                                                         //Log.d("uploadfile", "高度=" + Float.intBitsToFloat(maltitude));
                                                                         FileUtils.writeLogFile(1, "高度=" + Float.intBitsToFloat(maltitude));
-                                                                        if (Float.intBitsToFloat(maltitude) - wayPointList.get(pointNum).getAltitude() < 0.1) {
+                                                                        if (Float.intBitsToFloat(maltitude) - hfdWayPointList.get(pointNum).getAltitude() < 0.1) {
                                                                             //对比机头朝向
                                                                             mtoward = 0;
                                                                             mtoward |= (data[29] & 0xFF);
@@ -234,7 +234,7 @@ public class HFDManager {
                                                                             mtoward |= (data[32] & 0xFF) << 24;
                                                                             //Log.d("uploadfile", "机头朝向=" + Float.intBitsToFloat(mtoward));
                                                                             FileUtils.writeLogFile(1, "机头朝向=" + Float.intBitsToFloat(mtoward));
-                                                                            if (Float.intBitsToFloat(mtoward) - wayPointList.get(pointNum).getToward() < 0.1) {
+                                                                            if (Float.intBitsToFloat(mtoward) - hfdWayPointList.get(pointNum).getToward() < 0.1) {
                                                                                 //对比俯仰角
                                                                                 mpitch = 0;
                                                                                 mpitch |= (data[33] & 0xFF);
@@ -243,7 +243,7 @@ public class HFDManager {
                                                                                 mpitch |= (data[36] & 0xFF) << 24;
                                                                                 //Log.d("uploadfile", "俯仰角=" + Float.intBitsToFloat(mpitch));
                                                                                 FileUtils.writeLogFile(1, "俯仰角=" + Float.intBitsToFloat(mpitch));
-                                                                                if (Float.intBitsToFloat(mpitch) - wayPointList.get(pointNum).getApitch() < 0.1) {
+                                                                                if (Float.intBitsToFloat(mpitch) - hfdWayPointList.get(pointNum).getApitch() < 0.1) {
                                                                                     //对比识别夹角
                                                                                     mangle = 0;
                                                                                     mangle |= (data[37] & 0xFF);
@@ -252,15 +252,15 @@ public class HFDManager {
                                                                                     mangle |= (data[40] & 0xFF) << 24;
                                                                                     //Log.d("uploadfile", "识别夹角=" + Float.intBitsToFloat(mangle));
                                                                                     FileUtils.writeLogFile(1, "识别夹角=" + Float.intBitsToFloat(mangle));
-                                                                                    if (Float.intBitsToFloat(mangle) - wayPointList.get(pointNum).getAngle() < 0.1) {
+                                                                                    if (Float.intBitsToFloat(mangle) - hfdWayPointList.get(pointNum).getAngle() < 0.1) {
                                                                                         //对比识别端类型
                                                                                         //Log.d("uploadfile", "识别端类型=" + (data[41] & 0x0FF));
                                                                                         FileUtils.writeLogFile(1, "识别端类型=" + (data[41] & 0x0FF));
-                                                                                        if ((data[41] & 0x0FF) == wayPointList.get(pointNum).getObject()) {
+                                                                                        if ((data[41] & 0x0FF) == hfdWayPointList.get(pointNum).getObject()) {
                                                                                             //对比线侧
                                                                                             //Log.d("uploadfile", "线侧=" + (data[42] & 0x0FF));
                                                                                             FileUtils.writeLogFile(1, "线侧=" + (data[42] & 0x0FF));
-                                                                                            if ((data[42] & 0x0FF) == wayPointList.get(pointNum).getSide()) {
+                                                                                            if ((data[42] & 0x0FF) == hfdWayPointList.get(pointNum).getSide()) {
                                                                                                 //对比识别点总数量
                                                                                                 atotal = 0;
                                                                                                 atotal |= (data[43] & 0xFF);
@@ -269,7 +269,7 @@ public class HFDManager {
                                                                                                 atotal |= (data[46] & 0xFF) << 24;
                                                                                                 //Log.d("uploadfile", "识别点总数量=" + atotal);
                                                                                                 FileUtils.writeLogFile(1, "识别点总数量=" + atotal);
-                                                                                                if (atotal == wayPointList.size())
+                                                                                                if (atotal == hfdWayPointList.size())
                                                                                                     postWaypoint(1, 0);
                                                                                             }
                                                                                         }
@@ -571,7 +571,7 @@ public class HFDManager {
     }
 
     public List<WayPoint> loadTower(List<TowerPoint> towerList) {
-        wayPointList = new ArrayList<WayPoint>();
+        hfdWayPointList.clear();
 //        List<WayPoint> prePointList = new ArrayList<WayPoint>();
 //        List<WayPoint> postPointList = new ArrayList<WayPoint>();
 //        if(towerList.size() == 0){
@@ -590,9 +590,9 @@ public class HFDManager {
         if (towerList.size() == 0) {
             sendErrorMessage("杆塔数据为空");
         } else {
-            wayPointList = FileUtils.loadXml(towerList);
+            hfdWayPointList = FileUtils.loadXml(towerList);
         }
-        return wayPointList;
+        return hfdWayPointList;
     }
 
     public List<TowerPoint> loadMarkPoint(List<TowerPoint> towerList) {
@@ -645,25 +645,28 @@ public class HFDManager {
 //            packet.generateCRC();
 //            sendUserData(packet.encodePacket());
 //        }
-        if (wayPointList.size() == 0) {
+//        if (upWayPointList.containsAll(hfdWayPointList) && hfdWayPointList.containsAll(upWayPointList)) {
+//            Log.d("uploadfile", "相等");
+//        }
+        if (hfdWayPointList.size() == 0) {
             sendErrorMessage("航点数据为空");
         } else {
             pointNum = 0;
             MAVLinkPacket packet = new MAVLinkPacket();
             msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
-            pointUpload.towerNum = Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1));
-            pointUpload.pointType = (byte) wayPointList.get(pointNum).getPointType();
-            pointUpload.variety = (byte) wayPointList.get(pointNum).getVariety();
+            pointUpload.towerNum = Integer.parseInt(hfdWayPointList.get(pointNum).getTowerNum().substring(1));
+            pointUpload.pointType = (byte) hfdWayPointList.get(pointNum).getPointType();
+            pointUpload.variety = (byte) hfdWayPointList.get(pointNum).getVariety();
             pointUpload.seqNum = pointNum;
-            pointUpload.latitude = wayPointList.get(pointNum).getLatitude();
-            pointUpload.longitude = wayPointList.get(pointNum).getLongitude();
-            pointUpload.altitude = wayPointList.get(pointNum).getAltitude();
-            pointUpload.toward = wayPointList.get(pointNum).getToward();
-            pointUpload.pitch = wayPointList.get(pointNum).getApitch();
-            pointUpload.angle = wayPointList.get(pointNum).getAngle();
-            pointUpload.objType = (byte) wayPointList.get(pointNum).getObject();
-            pointUpload.side = (byte) wayPointList.get(pointNum).getSide();
-            pointUpload.totalNum = wayPointList.size();
+            pointUpload.latitude = hfdWayPointList.get(pointNum).getLatitude();
+            pointUpload.longitude = hfdWayPointList.get(pointNum).getLongitude();
+            pointUpload.altitude = hfdWayPointList.get(pointNum).getAltitude();
+            pointUpload.toward = hfdWayPointList.get(pointNum).getToward();
+            pointUpload.pitch = hfdWayPointList.get(pointNum).getApitch();
+            pointUpload.angle = hfdWayPointList.get(pointNum).getAngle();
+            pointUpload.objType = (byte) hfdWayPointList.get(pointNum).getObject();
+            pointUpload.side = (byte) hfdWayPointList.get(pointNum).getSide();
+            pointUpload.totalNum = hfdWayPointList.size();
             packet = pointUpload.pack();
             packet.generateCRC();
             sendUserData(packet.encodePacket());
@@ -953,22 +956,22 @@ public class HFDManager {
     private void postWaypoint(int actionType, int seqNum) {
         if (actionType == 1) {
             pointNum++;
-            if (pointNum < wayPointList.size()) {
+            if (pointNum < hfdWayPointList.size()) {
                 MAVLinkPacket packet = new MAVLinkPacket();
                 msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
-                pointUpload.towerNum = Integer.parseInt(wayPointList.get(pointNum).getTowerNum().substring(1));
-                pointUpload.pointType = (byte) wayPointList.get(pointNum).getPointType();
-                pointUpload.variety = (byte) wayPointList.get(pointNum).getVariety();
+                pointUpload.towerNum = Integer.parseInt(hfdWayPointList.get(pointNum).getTowerNum().substring(1));
+                pointUpload.pointType = (byte) hfdWayPointList.get(pointNum).getPointType();
+                pointUpload.variety = (byte) hfdWayPointList.get(pointNum).getVariety();
                 pointUpload.seqNum = pointNum;
-                pointUpload.latitude = wayPointList.get(pointNum).getLatitude();
-                pointUpload.longitude = wayPointList.get(pointNum).getLongitude();
-                pointUpload.altitude = wayPointList.get(pointNum).getAltitude();
-                pointUpload.toward = wayPointList.get(pointNum).getToward();
-                pointUpload.pitch = wayPointList.get(pointNum).getApitch();
-                pointUpload.angle = wayPointList.get(pointNum).getAngle();
-                pointUpload.objType = (byte) wayPointList.get(pointNum).getObject();
-                pointUpload.side = (byte) wayPointList.get(pointNum).getSide();
-                pointUpload.totalNum = wayPointList.size();
+                pointUpload.latitude = hfdWayPointList.get(pointNum).getLatitude();
+                pointUpload.longitude = hfdWayPointList.get(pointNum).getLongitude();
+                pointUpload.altitude = hfdWayPointList.get(pointNum).getAltitude();
+                pointUpload.toward = hfdWayPointList.get(pointNum).getToward();
+                pointUpload.pitch = hfdWayPointList.get(pointNum).getApitch();
+                pointUpload.angle = hfdWayPointList.get(pointNum).getAngle();
+                pointUpload.objType = (byte) hfdWayPointList.get(pointNum).getObject();
+                pointUpload.side = (byte) hfdWayPointList.get(pointNum).getSide();
+                pointUpload.totalNum = hfdWayPointList.size();
                 packet = pointUpload.pack();
                 packet.generateCRC();
                 sendUserData(packet.encodePacket());
@@ -980,14 +983,14 @@ public class HFDManager {
         } else {
             try {
                 object.put("result", "start");
-                object.put("tower", wayPointList.get(seqNum).getId());
+                object.put("tower", hfdWayPointList.get(seqNum).getId());
                 object.put("point", seqNum);
             } catch (Exception e) {
                 object = null;
             }
             messServer.setInfomation((byte) 15, object);
             FileUtils.writeLogFile(0, "");
-            if (seqNum == wayPointList.size() - 1)
+            if (seqNum == hfdWayPointList.size() - 1)
                 rebackMsg(15, "success", "巡检结束");
         }
     }
