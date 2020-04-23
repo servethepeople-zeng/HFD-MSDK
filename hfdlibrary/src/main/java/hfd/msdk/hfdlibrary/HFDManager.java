@@ -36,6 +36,7 @@ import dji.keysdk.KeyManager;
 import dji.keysdk.PayloadKey;
 import dji.keysdk.callback.ActionCallback;
 import dji.keysdk.callback.KeyListener;
+import dji.midware.data.manager.P3.DJIPayloadUsbDataManager;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.mission.MissionControl;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
@@ -300,6 +301,20 @@ public class HFDManager {
                                         }
                                     } else if ("66".equals(Integer.toHexString(data[5] & 0x0FF))) {
                                         createMAVLink(13, 0);
+                                    }else if ("42".equals(Integer.toHexString(data[5] & 0x0FF))){
+                                        int stroage = 0;
+                                        stroage |= (data[7] & 0xFF);
+                                        stroage |= (data[8] & 0xFF) << 8;
+                                        stroage |= (data[9] & 0xFF) << 16;
+                                        stroage |= (data[10] & 0xFF) << 24;
+                                        try {
+                                            object.put("totalStorage", (data[6] & 0x0FF)+"G");
+                                            object.put("remainStorage", stroage+"M");
+                                        } catch (Exception e) {
+                                            object = null;
+                                        }
+                                        messServer.setInfomation((byte) 2, object);
+                                        FileUtils.writeLogFile(0, object.toString());
                                     }
                                 } else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
                                     //反馈命令处理 以下表示拍照完成
@@ -331,19 +346,19 @@ public class HFDManager {
     }
 
     public static void main(String args[]) {
-        List<WayPoint> mwaypoints = new ArrayList<WayPoint>();
-
-        List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
-        TowerPoint tower1 = new TowerPoint();
-        tower1 = new TowerPoint();
-        tower1.setAltitude(50f);
-        tower1.setId("afafdasgdsagdasg");
-        tower1.setTowerNum("#11");
-        tower1.setTowerTypeName("zx");
-        tower1.setTowerNumber("#8");
-        tower1.setLatitude(39.3810467);
-        tower1.setLongitude(111.192265);
-        towerLists.add(tower1);
+//        List<WayPoint> mwaypoints = new ArrayList<WayPoint>();
+//
+//        List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
+//        TowerPoint tower1 = new TowerPoint();
+//        tower1 = new TowerPoint();
+//        tower1.setAltitude(50f);
+//        tower1.setId("afafdasgdsagdasg");
+//        tower1.setTowerNum("#11");
+//        tower1.setTowerTypeName("zx");
+//        tower1.setTowerNumber("#8");
+//        tower1.setLatitude(39.3810467);
+//        tower1.setLongitude(111.192265);
+//        towerLists.add(tower1);
 
 //                tower1 = new TowerPoint();
 //                tower1.setAltitude(50f);
@@ -365,11 +380,27 @@ public class HFDManager {
 //                tower1.setLongitude(111.199075);
 //                towerLists.add(tower1);
 
-        mwaypoints = FileUtils.loadXml(towerLists);
-        System.out.println(mwaypoints.size());
-        for (int i = 0; i < mwaypoints.size(); i++) {
-            System.out.println(mwaypoints.get(i).getId() + "," + mwaypoints.get(i).getTowerNum() + "," + mwaypoints.get(i).getSeqNumber());
+//        mwaypoints = FileUtils.loadXml(towerLists);
+//        System.out.println(mwaypoints.size());
+//        for (int i = 0; i < mwaypoints.size(); i++) {
+//            System.out.println(mwaypoints.get(i).getId() + "," + mwaypoints.get(i).getTowerNum() + "," + mwaypoints.get(i).getSeqNumber());
+//        }
+        String missonName = "abce1";
+
+        byte[] missionNameByte = new byte[missonName.length()+8];
+        missionNameByte[0] = (byte)253;
+        missionNameByte[1] = (byte)missonName.length();
+        missionNameByte[2] = (byte)20;
+        missionNameByte[3] = (byte)255;
+        missionNameByte[4] = (byte)190;
+        missionNameByte[5] = (byte)70;
+        for(int i=6;i<6+missonName.length();i++) {
+            missionNameByte[i] = (byte) missonName.charAt(i-6);
         }
+        missionNameByte[missonName.length()+6] = (byte)69;
+        missionNameByte[missonName.length()+7] = (byte)84;
+        System.out.println(Helper.byte2hex(missionNameByte));
+
     }
 
     public static List<TowerPoint> loadTower1(List<TowerPoint> towerList) {
@@ -442,7 +473,19 @@ public class HFDManager {
 
     public void setMissionName(String missionName) {
         this.missonName = missionName;
-
+        byte[] missionNameByte = new byte[missonName.length()+8];
+        missionNameByte[0] = (byte)253;
+        missionNameByte[1] = (byte)missonName.length();
+        missionNameByte[2] = (byte)20;
+        missionNameByte[3] = (byte)255;
+        missionNameByte[4] = (byte)190;
+        missionNameByte[5] = (byte)70;
+        for(int i=6;i<6+missonName.length();i++) {
+            missionNameByte[i] = (byte) missonName.charAt(i-6);
+        }
+        missionNameByte[missonName.length()+6] = (byte)69;
+        missionNameByte[missonName.length()+7] = (byte)84;
+        sendUserData(missionNameByte);
     }
 
     public void returnCenter() {
@@ -1409,6 +1452,11 @@ public class HFDManager {
             FileUtils.writeLogFile(2, "call getWindWarning() error is " + e.getMessage());
         }
         return dataObject;
+    }
+
+    public void unInitListener() {
+        KeyManager.getInstance().removeListener(getDataListener);
+        DJIPayloadUsbDataManager.getInstance().setDataListener(null);
     }
 
 }

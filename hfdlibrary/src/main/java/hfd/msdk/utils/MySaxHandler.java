@@ -72,7 +72,7 @@ public class MySaxHandler extends DefaultHandler{
             else if ("Pitch".equals(tagName))
                 currentPoint.setApitch(Float.parseFloat(data));
             else if ("angle".equals(tagName))
-                currentPoint.setAngle(Integer.parseInt(data));
+                currentPoint.setAngle(Float.parseFloat(data));
             else if ("object".equals(tagName))
                 currentPoint.setObject(Integer.parseInt(data));
             else if ("side".equals(tagName)) {

@@ -168,7 +168,7 @@ public class FileUtils {
         } catch (Exception e) {
             e.printStackTrace();
             listMarkPoint.clear();
-            sendErrorMessage("航点文件错误");
+            sendErrorMessage("航点文件"+towerNames+".xml缺失或出错，请检查航点文件");
         }
         Collections.sort(listMarkPoint, new Comparator<WayPoint>() {
             @Override
