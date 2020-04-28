@@ -140,7 +140,7 @@ public class FileUtils {
     }
 
     /**
-     * 加载xml文件
+     * 加载xml文件 只查找一个对应的文件
      * /mnt/internal_sd/
      * @param towerList
      * @return List<WayPoint>
@@ -177,6 +177,60 @@ public class FileUtils {
                 return i;
             }
         });
+
+        return listMarkPoint;
+    }
+
+    /**
+     * 新加载xml文件 根据杆塔号进行航点文件的拼接
+     * /mnt/internal_sd/
+     * @param towerList
+     * @return List<WayPoint>
+     */
+    public static List<WayPoint> newLoadXml(List<TowerPoint> towerList){
+        List<WayPoint> listMarkPoint = new ArrayList<WayPoint>();
+        List<WayPoint> tempMarkPoint = new ArrayList<WayPoint>();
+        for(int i=0;i<towerList.size();i++) {
+            tempMarkPoint.clear();
+            try {
+                File file = new File(filePath+"/"+towerList.get(i).getTowerNum()+"A.xml");
+                //File file = new File("F:\\"+towerNames+".xml");
+                //System.out.println(file.getPath());
+                InputStream inputStream = new FileInputStream(file);
+                SAXParserFactory spf = SAXParserFactory.newInstance();
+                SAXParser saxParser = spf.newSAXParser();
+                MySaxHandler handler = new MySaxHandler();
+                saxParser.parse(inputStream, handler);
+                inputStream.close();
+                tempMarkPoint = handler.getTowerPoints();
+            } catch (Exception e) {
+                e.printStackTrace();
+                listMarkPoint.clear();
+                sendErrorMessage("航点文件"+towerList.get(i).getTowerNum()+"A.xml缺失或出错，请检查航点文件");
+            }
+            listMarkPoint.addAll(tempMarkPoint);
+        }
+
+        for(int i=towerList.size()-1;i>=0;i--) {
+            tempMarkPoint.clear();
+            try {
+                File file = new File(filePath+"/"+towerList.get(i).getTowerNum()+"B.xml");
+                //File file = new File("F:\\"+towerNames+".xml");
+                //System.out.println(file.getPath());
+                InputStream inputStream = new FileInputStream(file);
+                SAXParserFactory spf = SAXParserFactory.newInstance();
+                SAXParser saxParser = spf.newSAXParser();
+                MySaxHandler handler = new MySaxHandler();
+                saxParser.parse(inputStream, handler);
+                inputStream.close();
+                tempMarkPoint = handler.getTowerPoints();
+            } catch (Exception e) {
+                e.printStackTrace();
+                listMarkPoint.clear();
+                sendErrorMessage("航点文件"+towerList.get(i).getTowerNum()+"B.xml缺失或出错，请检查航点文件");
+            }
+            listMarkPoint.addAll(tempMarkPoint);
+        }
 
         return listMarkPoint;
     }

@@ -303,10 +303,10 @@ public class HFDManager {
                                         createMAVLink(13, 0);
                                     }else if ("42".equals(Integer.toHexString(data[5] & 0x0FF))){
                                         int stroage = 0;
-                                        stroage |= (data[7] & 0xFF);
-                                        stroage |= (data[8] & 0xFF) << 8;
-                                        stroage |= (data[9] & 0xFF) << 16;
-                                        stroage |= (data[10] & 0xFF) << 24;
+                                        stroage |= (data[7] & 0xFF) << 24;
+                                        stroage |= (data[8] & 0xFF) << 16;
+                                        stroage |= (data[9] & 0xFF) << 8;
+                                        stroage |= (data[10] & 0xFF);
                                         try {
                                             object.put("totalStorage", (data[6] & 0x0FF)+"G");
                                             object.put("remainStorage", stroage+"M");
@@ -346,60 +346,63 @@ public class HFDManager {
     }
 
     public static void main(String args[]) {
-//        List<WayPoint> mwaypoints = new ArrayList<WayPoint>();
-//
-//        List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
-//        TowerPoint tower1 = new TowerPoint();
-//        tower1 = new TowerPoint();
-//        tower1.setAltitude(50f);
-//        tower1.setId("afafdasgdsagdasg");
-//        tower1.setTowerNum("#11");
-//        tower1.setTowerTypeName("zx");
-//        tower1.setTowerNumber("#8");
-//        tower1.setLatitude(39.3810467);
-//        tower1.setLongitude(111.192265);
-//        towerLists.add(tower1);
+        List<WayPoint> mwaypoints = new ArrayList<WayPoint>();
 
-//                tower1 = new TowerPoint();
-//                tower1.setAltitude(50f);
-//                tower1.setId("ghghghghghghghf");
-//                tower1.setTowerNum("#9");
-//                tower1.setTowerTypeName("zx");
-//                tower1.setTowerNumber("#9");
-//                tower1.setLatitude(39.3796983);
-//                tower1.setLongitude(111.197075);
-//                towerLists.add(tower1);
-//
-//                tower1 = new TowerPoint();
-//                tower1.setId("vbvxcbvxcbvxcbvxbv");
-//                tower1.setAltitude(50f);
-//                tower1.setTowerNum("#10");
-//                tower1.setTowerTypeName("zx");
-//                tower1.setTowerNumber("#10");
-//                tower1.setLatitude(39.3788);
-//                tower1.setLongitude(111.199075);
-//                towerLists.add(tower1);
+        List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
+        TowerPoint tower1 = new TowerPoint();
+        tower1 = new TowerPoint();
+        tower1.setAltitude(50f);
+        tower1.setId("afafdasgdsagdasg");
+        tower1.setTowerNum("#11");
+        tower1.setTowerTypeName("zx");
+        tower1.setTowerNumber("#8");
+        tower1.setLatitude(39.3810467);
+        tower1.setLongitude(111.192265);
+        towerLists.add(tower1);
 
+        tower1 = new TowerPoint();
+        tower1.setAltitude(50f);
+        tower1.setId("ghghghghghghghf");
+        tower1.setTowerNum("#9");
+        tower1.setTowerTypeName("zx");
+        tower1.setTowerNumber("#9");
+        tower1.setLatitude(39.3796983);
+        tower1.setLongitude(111.197075);
+        towerLists.add(tower1);
+
+        tower1 = new TowerPoint();
+        tower1.setId("vbvxcbvxcbvxcbvxbv");
+        tower1.setAltitude(50f);
+        tower1.setTowerNum("#10");
+        tower1.setTowerTypeName("zx");
+        tower1.setTowerNumber("#10");
+        tower1.setLatitude(39.3788);
+        tower1.setLongitude(111.199075);
+        towerLists.add(tower1);
+
+        for(int i=towerLists.size()-1;i>=0;i--){
+            System.out.println(towerLists.get(i).getTowerNumber());
+        }
 //        mwaypoints = FileUtils.loadXml(towerLists);
 //        System.out.println(mwaypoints.size());
 //        for (int i = 0; i < mwaypoints.size(); i++) {
 //            System.out.println(mwaypoints.get(i).getId() + "," + mwaypoints.get(i).getTowerNum() + "," + mwaypoints.get(i).getSeqNumber());
 //        }
-        String missonName = "abce1";
-
-        byte[] missionNameByte = new byte[missonName.length()+8];
-        missionNameByte[0] = (byte)253;
-        missionNameByte[1] = (byte)missonName.length();
-        missionNameByte[2] = (byte)20;
-        missionNameByte[3] = (byte)255;
-        missionNameByte[4] = (byte)190;
-        missionNameByte[5] = (byte)70;
-        for(int i=6;i<6+missonName.length();i++) {
-            missionNameByte[i] = (byte) missonName.charAt(i-6);
-        }
-        missionNameByte[missonName.length()+6] = (byte)69;
-        missionNameByte[missonName.length()+7] = (byte)84;
-        System.out.println(Helper.byte2hex(missionNameByte));
+//        String missonName = "abce1";
+//
+//        byte[] missionNameByte = new byte[missonName.length()+8];
+//        missionNameByte[0] = (byte)253;
+//        missionNameByte[1] = (byte)missonName.length();
+//        missionNameByte[2] = (byte)20;
+//        missionNameByte[3] = (byte)255;
+//        missionNameByte[4] = (byte)190;
+//        missionNameByte[5] = (byte)70;
+//        for(int i=6;i<6+missonName.length();i++) {
+//            missionNameByte[i] = (byte) missonName.charAt(i-6);
+//        }
+//        missionNameByte[missonName.length()+6] = (byte)69;
+//        missionNameByte[missonName.length()+7] = (byte)84;
+//        System.out.println(Helper.byte2hex(missionNameByte));
 
     }
 
@@ -637,6 +640,32 @@ public class HFDManager {
         }
         return hfdWayPointList;
     }
+
+    public List<WayPoint> newLoadTower(List<TowerPoint> towerList) {
+        hfdWayPointList.clear();
+//        List<WayPoint> prePointList = new ArrayList<WayPoint>();
+//        List<WayPoint> postPointList = new ArrayList<WayPoint>();
+//        if(towerList.size() == 0){
+//            sendErrorMessage("杆塔数据为空");
+//            return null;
+//        } else if(towerList.size() == 1){
+//            //sendErrorMessage("只上传了一个直线塔，生成的航点会在塔的北向和南向，请注意飞行安全！");
+//            return oneTGeneratePoints(towerList);
+//            //有两个塔
+//        }else if(towerList.size()==2){
+//            return twoTGeneratePoints(towerList);
+//        } else {
+//            System.out.println("航点个数大于2");
+//            return mulTGeneratePoints(towerList);
+//        }
+        if (towerList.size() == 0) {
+            sendErrorMessage("杆塔数据为空");
+        } else {
+            hfdWayPointList = FileUtils.newLoadXml(towerList);
+        }
+        return hfdWayPointList;
+    }
+
 
     public List<TowerPoint> loadMarkPoint(List<TowerPoint> towerList) {
         //flightController.startTakeoff();
