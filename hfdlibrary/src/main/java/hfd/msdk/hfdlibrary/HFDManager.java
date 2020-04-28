@@ -1056,7 +1056,7 @@ public class HFDManager {
             try {
                 object.put("result", "start");
                 object.put("tower", hfdWayPointList.get(seqNum).getId());
-                object.put("point", seqNum);
+                object.put("point", hfdWayPointList.get(seqNum).getSeqNumber());
             } catch (Exception e) {
                 object = null;
             }
