@@ -145,7 +145,7 @@ public class FileUtils {
      * @param towerList
      * @return List<WayPoint>
      */
-    public static List<WayPoint> loadXml(List<TowerPoint> towerList){
+    public static List<WayPoint> pastLoadXml(List<TowerPoint> towerList){
         List<WayPoint> listMarkPoint = new ArrayList<WayPoint>();
 //        List<WayPoint> tempMarkPoint = new ArrayList<WayPoint>();
 //        List<WayPoint> tempMarkPoint1 = new ArrayList<WayPoint>();
@@ -187,7 +187,7 @@ public class FileUtils {
      * @param towerList
      * @return List<WayPoint>
      */
-    public static List<WayPoint> newLoadXml(List<TowerPoint> towerList){
+    public static List<WayPoint> loadTower(List<TowerPoint> towerList){
         List<WayPoint> listMarkPoint = new ArrayList<WayPoint>();
         List<WayPoint> tempMarkPoint = new ArrayList<WayPoint>();
         for(int i=0;i<towerList.size();i++) {

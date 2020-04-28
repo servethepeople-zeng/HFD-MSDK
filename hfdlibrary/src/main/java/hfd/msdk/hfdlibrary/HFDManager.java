@@ -616,6 +616,31 @@ public class HFDManager {
         }
     }
 
+    public List<WayPoint> pastLoadTower(List<TowerPoint> towerList) {
+        hfdWayPointList.clear();
+//        List<WayPoint> prePointList = new ArrayList<WayPoint>();
+//        List<WayPoint> postPointList = new ArrayList<WayPoint>();
+//        if(towerList.size() == 0){
+//            sendErrorMessage("杆塔数据为空");
+//            return null;
+//        } else if(towerList.size() == 1){
+//            //sendErrorMessage("只上传了一个直线塔，生成的航点会在塔的北向和南向，请注意飞行安全！");
+//            return oneTGeneratePoints(towerList);
+//            //有两个塔
+//        }else if(towerList.size()==2){
+//            return twoTGeneratePoints(towerList);
+//        } else {
+//            System.out.println("航点个数大于2");
+//            return mulTGeneratePoints(towerList);
+//        }
+        if (towerList.size() == 0) {
+            sendErrorMessage("杆塔数据为空");
+        } else {
+            hfdWayPointList = FileUtils.pastLoadXml(towerList);
+        }
+        return hfdWayPointList;
+    }
+
     public List<WayPoint> loadTower(List<TowerPoint> towerList) {
         hfdWayPointList.clear();
 //        List<WayPoint> prePointList = new ArrayList<WayPoint>();
@@ -636,32 +661,7 @@ public class HFDManager {
         if (towerList.size() == 0) {
             sendErrorMessage("杆塔数据为空");
         } else {
-            hfdWayPointList = FileUtils.loadXml(towerList);
-        }
-        return hfdWayPointList;
-    }
-
-    public List<WayPoint> newLoadTower(List<TowerPoint> towerList) {
-        hfdWayPointList.clear();
-//        List<WayPoint> prePointList = new ArrayList<WayPoint>();
-//        List<WayPoint> postPointList = new ArrayList<WayPoint>();
-//        if(towerList.size() == 0){
-//            sendErrorMessage("杆塔数据为空");
-//            return null;
-//        } else if(towerList.size() == 1){
-//            //sendErrorMessage("只上传了一个直线塔，生成的航点会在塔的北向和南向，请注意飞行安全！");
-//            return oneTGeneratePoints(towerList);
-//            //有两个塔
-//        }else if(towerList.size()==2){
-//            return twoTGeneratePoints(towerList);
-//        } else {
-//            System.out.println("航点个数大于2");
-//            return mulTGeneratePoints(towerList);
-//        }
-        if (towerList.size() == 0) {
-            sendErrorMessage("杆塔数据为空");
-        } else {
-            hfdWayPointList = FileUtils.newLoadXml(towerList);
+            hfdWayPointList = FileUtils.loadTower(towerList);
         }
         return hfdWayPointList;
     }
