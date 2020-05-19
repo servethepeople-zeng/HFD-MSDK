@@ -7,7 +7,7 @@ package hfd.msdk.mavlink;
 public class msg_waypoint_upload extends MAVLinkMessage {
 
     public static final int MAVLINK_MSG_WAYPOINT_UPLOAD = 71;
-    public static final int MAVLINK_MSG_LENGTH = 40;
+    public static final int MAVLINK_MSG_LENGTH = 44;
 
     public int towerNum;
     public byte pointType;
@@ -21,6 +21,10 @@ public class msg_waypoint_upload extends MAVLinkMessage {
     public float angle;
     public byte objType;
     public byte side;
+    public byte trend;
+    public byte leftZoomPosition;
+    public byte zoomPosition;
+    public byte rightZoomPosition;
     public int totalNum;
 
     public msg_waypoint_upload(MAVLinkPacket packet) {
@@ -49,6 +53,10 @@ public class msg_waypoint_upload extends MAVLinkMessage {
         packet.payload.putFloat(angle);
         packet.payload.putByte(objType);
         packet.payload.putByte(side);
+        packet.payload.putByte(trend);
+        packet.payload.putByte(leftZoomPosition);
+        packet.payload.putByte(zoomPosition);
+        packet.payload.putByte(rightZoomPosition);
         packet.payload.putInt(totalNum);
         return packet;
     }
@@ -68,6 +76,10 @@ public class msg_waypoint_upload extends MAVLinkMessage {
         this.angle = payload.getFloat();
         this.objType = payload.getByte();
         this.side = payload.getByte();
+        this.trend = payload.getByte();
+        this.leftZoomPosition = payload.getByte();
+        this.zoomPosition = payload.getByte();
+        this.rightZoomPosition = payload.getByte();
         this.totalNum = payload.getInt();
     }
 }

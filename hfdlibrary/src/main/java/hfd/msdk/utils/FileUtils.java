@@ -18,6 +18,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import hfd.msdk.hfdlibrary.HFDManager;
+import hfd.msdk.model.NewWayPoint;
 import hfd.msdk.model.TowerPoint;
 import hfd.msdk.model.WayPoint;
 
@@ -40,30 +41,30 @@ public class FileUtils {
     public static void initLogFile() {
         File fileDir = new File(filePath);
         File logFileDir = new File(logFilePath);
-        if(fileDir.exists()){
-            if(logFileDir.exists()){
-                if(getlogFileSize(logFileDir)){
+        if (fileDir.exists()) {
+            if (logFileDir.exists()) {
+                if (getlogFileSize(logFileDir)) {
                     logFileDir.delete();
                     try {
                         logFileDir.createNewFile();
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         HFDManager.sendErrorMessage("创建SDK日志文件失败");
                         e.printStackTrace();
                     }
                 }
-            }else{
+            } else {
                 try {
                     logFileDir.createNewFile();
-                }catch(Exception e){
+                } catch (Exception e) {
                     HFDManager.sendErrorMessage("创建SDK日志文件失败");
                     e.printStackTrace();
                 }
             }
-        }else{
+        } else {
             fileDir.mkdir();
             try {
                 logFileDir.createNewFile();
-            }catch(Exception e){
+            } catch (Exception e) {
                 HFDManager.sendErrorMessage("创建SDK日志文件失败");
                 e.printStackTrace();
             }
@@ -91,9 +92,9 @@ public class FileUtils {
             logSize = logSize / 1024;
         }
         //MB
-        if(logSize > 20){
+        if (logSize > 20) {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
@@ -112,13 +113,13 @@ public class FileUtils {
 
                 StringBuffer sb = new StringBuffer();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                if(logType == 0) {
-                    sb.append(sdf.format(new Date()) + ":" +"info is ");
-                }else if(logType == 1){
-                    sb.append(sdf.format(new Date()) + ":" +"debug is ");
-                }else if(logType == 1){
-                    sb.append(sdf.format(new Date()) + ":" +"error is ");
-                }else{
+                if (logType == 0) {
+                    sb.append(sdf.format(new Date()) + ":" + "info is ");
+                } else if (logType == 1) {
+                    sb.append(sdf.format(new Date()) + ":" + "debug is ");
+                } else if (logType == 1) {
+                    sb.append(sdf.format(new Date()) + ":" + "error is ");
+                } else {
                     sb.append(sdf.format(new Date()) + ":");
                 }
                 sb.append(mContent + "\n");
@@ -142,20 +143,21 @@ public class FileUtils {
     /**
      * 加载xml文件 只查找一个对应的文件
      * /mnt/internal_sd/
+     *
      * @param towerList
      * @return List<WayPoint>
      */
-    public static List<WayPoint> pastLoadXml(List<TowerPoint> towerList){
+    public static List<WayPoint> pastLoadXml(List<TowerPoint> towerList) {
         List<WayPoint> listMarkPoint = new ArrayList<WayPoint>();
 //        List<WayPoint> tempMarkPoint = new ArrayList<WayPoint>();
 //        List<WayPoint> tempMarkPoint1 = new ArrayList<WayPoint>();
         String towerNames = "";
-        for(int i=0;i<towerList.size();i++) {
-            towerNames = towerNames+towerList.get(i).getTowerNum();
+        for (int i = 0; i < towerList.size(); i++) {
+            towerNames = towerNames + towerList.get(i).getTowerNum();
         }
         System.out.println(towerNames);
         try {
-            File file = new File(filePath+"/"+towerNames+".xml");
+            File file = new File(filePath + "/" + towerNames + ".xml");
             //File file = new File("F:\\"+towerNames+".xml");
             //System.out.println(file.getPath());
             InputStream inputStream = new FileInputStream(file);
@@ -164,11 +166,11 @@ public class FileUtils {
             MySaxHandler handler = new MySaxHandler();
             saxParser.parse(inputStream, handler);
             inputStream.close();
-            listMarkPoint = handler.getTowerPoints();
+            //listMarkPoint = handler.getTowerPoints();
         } catch (Exception e) {
             e.printStackTrace();
             listMarkPoint.clear();
-            sendErrorMessage("航点文件"+towerNames+".xml缺失或出错，请检查航点文件");
+            sendErrorMessage("航点文件" + towerNames + ".xml缺失或出错，请检查航点文件");
         }
         Collections.sort(listMarkPoint, new Comparator<WayPoint>() {
             @Override
@@ -184,16 +186,17 @@ public class FileUtils {
     /**
      * 新加载xml文件 根据杆塔号进行航点文件的拼接
      * /mnt/internal_sd/
+     *
      * @param towerList
      * @return List<WayPoint>
      */
-    public static List<WayPoint> loadTower(List<TowerPoint> towerList){
-        List<WayPoint> listMarkPoint = new ArrayList<WayPoint>();
-        List<WayPoint> tempMarkPoint = new ArrayList<WayPoint>();
-        for(int i=0;i<towerList.size();i++) {
+    public static List<NewWayPoint> loadTower(List<TowerPoint> towerList) {
+        List<NewWayPoint> listMarkPoint = new ArrayList<NewWayPoint>();
+        List<NewWayPoint> tempMarkPoint = new ArrayList<NewWayPoint>();
+        for (int i = 0; i < towerList.size(); i++) {
             tempMarkPoint.clear();
             try {
-                File file = new File(filePath+"/"+towerList.get(i).getTowerNum()+"A.xml");
+                File file = new File(filePath + "/" + towerList.get(i).getTowerNum() + "A.xml");
                 //File file = new File("F:\\"+towerNames+".xml");
                 //System.out.println(file.getPath());
                 InputStream inputStream = new FileInputStream(file);
@@ -206,15 +209,15 @@ public class FileUtils {
             } catch (Exception e) {
                 e.printStackTrace();
                 listMarkPoint.clear();
-                sendErrorMessage("航点文件"+towerList.get(i).getTowerNum()+"A.xml缺失或出错，请检查航点文件");
+                sendErrorMessage("航点文件" + towerList.get(i).getTowerNum() + "A.xml缺失或出错，请检查航点文件");
             }
             listMarkPoint.addAll(tempMarkPoint);
         }
 
-        for(int i=towerList.size()-1;i>=0;i--) {
+        for (int i = towerList.size() - 1; i >= 0; i--) {
             tempMarkPoint.clear();
             try {
-                File file = new File(filePath+"/"+towerList.get(i).getTowerNum()+"B.xml");
+                File file = new File(filePath + "/" + towerList.get(i).getTowerNum() + "B.xml");
                 //File file = new File("F:\\"+towerNames+".xml");
                 //System.out.println(file.getPath());
                 InputStream inputStream = new FileInputStream(file);
@@ -227,7 +230,7 @@ public class FileUtils {
             } catch (Exception e) {
                 e.printStackTrace();
                 listMarkPoint.clear();
-                sendErrorMessage("航点文件"+towerList.get(i).getTowerNum()+"B.xml缺失或出错，请检查航点文件");
+                sendErrorMessage("航点文件" + towerList.get(i).getTowerNum() + "B.xml缺失或出错，请检查航点文件");
             }
             listMarkPoint.addAll(tempMarkPoint);
         }

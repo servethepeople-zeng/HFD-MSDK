@@ -7,16 +7,17 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.util.ArrayList;
 import java.util.List;
 
-import hfd.msdk.model.WayPoint;
+import hfd.msdk.model.NewWayPoint;
 
 public class MySaxHandler extends DefaultHandler{
 
-    private List<WayPoint> wayPoint;
-    private WayPoint currentPoint;
+    private List<NewWayPoint> wayPoint;
+    private NewWayPoint currentPoint;
     private String tagName;
     private String pointName;
+    private StringBuffer sb;
 
-    public List<WayPoint> getTowerPoints() {
+    public List<NewWayPoint> getTowerPoints() {
         return wayPoint;
     }
 
@@ -36,7 +37,7 @@ public class MySaxHandler extends DefaultHandler{
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (localName.equals("Point")) {
-            currentPoint = new WayPoint();
+            currentPoint = new NewWayPoint();
             pointName = "Point";
         }
         this.tagName = localName;
@@ -50,7 +51,10 @@ public class MySaxHandler extends DefaultHandler{
     public void characters(char[] ch, int start, int length) throws SAXException {
 
         if("Point".equals(pointName)&&tagName != null) {
-            String data = new String(ch, start, length);
+            String temp = new String(ch, start, length);
+            temp = temp.trim();
+            sb.append(temp);
+            String data = sb.toString();
             if ("id".equals(tagName))
                 currentPoint.setId(data);
             else if ("towerNum".equals(tagName))
@@ -75,6 +79,14 @@ public class MySaxHandler extends DefaultHandler{
                 currentPoint.setAngle(Float.parseFloat(data));
             else if ("object".equals(tagName))
                 currentPoint.setObject(Integer.parseInt(data));
+            else if ("Orientation".equals(tagName))
+                currentPoint.setOrientation(Integer.parseInt(data));
+            else if ("ZoomPos".equals(tagName))
+                currentPoint.setZoomPosition(Integer.parseInt(data));
+            else if ("LeftZp".equals(tagName))
+                currentPoint.setLeftZoomPosition(Integer.parseInt(data));
+            else if ("RightZp".equals(tagName))
+                currentPoint.setRightZoomPosition(Integer.parseInt(data));
             else if ("side".equals(tagName)) {
                 if ("A".equals(data))
                     currentPoint.setSide(1);
