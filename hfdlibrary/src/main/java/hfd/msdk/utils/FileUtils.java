@@ -217,6 +217,7 @@ public class FileUtils {
         }
 
         for (int i = towerList.size() - 1; i >= 0; i--) {
+            loadTowerId = towerList.get(i).getId();
             tempMarkPoint.clear();
             try {
                 File file = new File(filePath + "/" + towerList.get(i).getTowerNum() + "B.xml");
