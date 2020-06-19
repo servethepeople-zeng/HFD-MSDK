@@ -227,58 +227,58 @@ public class HFDManager {
                                                                         maltitude |= (data[28] & 0xFF) << 24;
                                                                         //Log.d("uploadfile", "高度=" + Float.intBitsToFloat(maltitude));
                                                                         FileUtils.writeLogFile(1, "高度=" + Float.intBitsToFloat(maltitude));
-                                                                        if (Float.intBitsToFloat(maltitude) - hfdWayPointList.get(pointNum).getAltitude() < 0.1) {
-                                                                            //对比机头朝向
-                                                                            mtoward = 0;
-                                                                            mtoward |= (data[29] & 0xFF);
-                                                                            mtoward |= (data[30] & 0xFF) << 8;
-                                                                            mtoward |= (data[31] & 0xFF) << 16;
-                                                                            mtoward |= (data[32] & 0xFF) << 24;
-                                                                            //Log.d("uploadfile", "机头朝向=" + Float.intBitsToFloat(mtoward));
-                                                                            FileUtils.writeLogFile(1, "机头朝向=" + Float.intBitsToFloat(mtoward));
-                                                                            if (Float.intBitsToFloat(mtoward) - hfdWayPointList.get(pointNum).getToward() < 0.1) {
-                                                                                //对比俯仰角
-                                                                                mpitch = 0;
-                                                                                mpitch |= (data[33] & 0xFF);
-                                                                                mpitch |= (data[34] & 0xFF) << 8;
-                                                                                mpitch |= (data[35] & 0xFF) << 16;
-                                                                                mpitch |= (data[36] & 0xFF) << 24;
-                                                                                //Log.d("uploadfile", "俯仰角=" + Float.intBitsToFloat(mpitch));
-                                                                                FileUtils.writeLogFile(1, "俯仰角=" + Float.intBitsToFloat(mpitch));
-                                                                                if (Float.intBitsToFloat(mpitch) - hfdWayPointList.get(pointNum).getApitch() < 0.1) {
-                                                                                    //对比识别夹角
-                                                                                    mangle = 0;
-                                                                                    mangle |= (data[37] & 0xFF);
-                                                                                    mangle |= (data[38] & 0xFF) << 8;
-                                                                                    mangle |= (data[39] & 0xFF) << 16;
-                                                                                    mangle |= (data[40] & 0xFF) << 24;
-                                                                                    //Log.d("uploadfile", "识别夹角=" + Float.intBitsToFloat(mangle));
-                                                                                    FileUtils.writeLogFile(1, "识别夹角=" + Float.intBitsToFloat(mangle));
-                                                                                    if (Float.intBitsToFloat(mangle) - hfdWayPointList.get(pointNum).getAngle() < 0.1) {
-                                                                                        //对比识别端类型
-                                                                                        //Log.d("uploadfile", "识别端类型=" + (data[41] & 0x0FF));
-                                                                                        FileUtils.writeLogFile(1, "识别端类型=" + (data[41] & 0x0FF));
-                                                                                        if ((data[41] & 0x0FF) == hfdWayPointList.get(pointNum).getObject()) {
-                                                                                            //对比线侧
-                                                                                            //Log.d("uploadfile", "线侧=" + (data[42] & 0x0FF));
-                                                                                            FileUtils.writeLogFile(1, "线侧=" + (data[42] & 0x0FF));
+//                                                                        if (Float.intBitsToFloat(maltitude) - hfdWayPointList.get(pointNum).getAltitude() < 0.1) {
+//                                                                            //对比机头朝向
+//                                                                            mtoward = 0;
+//                                                                            mtoward |= (data[29] & 0xFF);
+//                                                                            mtoward |= (data[30] & 0xFF) << 8;
+//                                                                            mtoward |= (data[31] & 0xFF) << 16;
+//                                                                            mtoward |= (data[32] & 0xFF) << 24;
+//                                                                            //Log.d("uploadfile", "机头朝向=" + Float.intBitsToFloat(mtoward));
+//                                                                            FileUtils.writeLogFile(1, "机头朝向=" + Float.intBitsToFloat(mtoward));
+//                                                                            if (Float.intBitsToFloat(mtoward) - hfdWayPointList.get(pointNum).getToward() < 0.1) {
+//                                                                                //对比俯仰角
+//                                                                                mpitch = 0;
+//                                                                                mpitch |= (data[33] & 0xFF);
+//                                                                                mpitch |= (data[34] & 0xFF) << 8;
+//                                                                                mpitch |= (data[35] & 0xFF) << 16;
+//                                                                                mpitch |= (data[36] & 0xFF) << 24;
+//                                                                                //Log.d("uploadfile", "俯仰角=" + Float.intBitsToFloat(mpitch));
+//                                                                                FileUtils.writeLogFile(1, "俯仰角=" + Float.intBitsToFloat(mpitch));
+//                                                                                if (Float.intBitsToFloat(mpitch) - hfdWayPointList.get(pointNum).getApitch() < 0.1) {
+//                                                                                    //对比识别夹角
+//                                                                                    mangle = 0;
+//                                                                                    mangle |= (data[37] & 0xFF);
+//                                                                                    mangle |= (data[38] & 0xFF) << 8;
+//                                                                                    mangle |= (data[39] & 0xFF) << 16;
+//                                                                                    mangle |= (data[40] & 0xFF) << 24;
+//                                                                                    //Log.d("uploadfile", "识别夹角=" + Float.intBitsToFloat(mangle));
+//                                                                                    FileUtils.writeLogFile(1, "识别夹角=" + Float.intBitsToFloat(mangle));
+//                                                                                    if (Float.intBitsToFloat(mangle) - hfdWayPointList.get(pointNum).getAngle() < 0.1) {
+//                                                                                        //对比识别端类型
+//                                                                                        //Log.d("uploadfile", "识别端类型=" + (data[41] & 0x0FF));
+//                                                                                        FileUtils.writeLogFile(1, "识别端类型=" + (data[41] & 0x0FF));
+//                                                                                        if ((data[41] & 0x0FF) == hfdWayPointList.get(pointNum).getObject()) {
+//                                                                                            //对比线侧
+//                                                                                            //Log.d("uploadfile", "线侧=" + (data[42] & 0x0FF));
+//                                                                                            FileUtils.writeLogFile(1, "线侧=" + (data[42] & 0x0FF));
                                                                                             if ((data[42] & 0x0FF) == hfdWayPointList.get(pointNum).getSide()) {
                                                                                                 //对比识别点总数量
                                                                                                 atotal = 0;
-                                                                                                atotal |= (data[43] & 0xFF);
-                                                                                                atotal |= (data[44] & 0xFF) << 8;
-                                                                                                atotal |= (data[45] & 0xFF) << 16;
-                                                                                                atotal |= (data[46] & 0xFF) << 24;
+                                                                                                atotal |= (data[47] & 0xFF);
+                                                                                                atotal |= (data[48] & 0xFF) << 8;
+                                                                                                atotal |= (data[49] & 0xFF) << 16;
+                                                                                                atotal |= (data[50] & 0xFF) << 24;
                                                                                                 //Log.d("uploadfile", "识别点总数量=" + atotal);
                                                                                                 FileUtils.writeLogFile(1, "识别点总数量=" + atotal);
                                                                                                 if (atotal == hfdWayPointList.size())
                                                                                                     postWaypoint(1, 0);
                                                                                             }
-                                                                                        }
+/*                                                                                        }
                                                                                     }
                                                                                 }
                                                                             }
-                                                                        }
+                                                                        }*/
                                                                     }
                                                                 }
                                                             }
@@ -344,6 +344,7 @@ public class HFDManager {
         timer = new Timer();
         WarningTimerTask warningTimerTask = new WarningTimerTask();
         timer.schedule(warningTimerTask, 60000, 60000);
+        createMAVLink(13, 0);
     }
 
     public static void main(String args[]) {
@@ -405,6 +406,13 @@ public class HFDManager {
 //        missionNameByte[missonName.length()+7] = (byte)84;
 //        System.out.println(Helper.byte2hex(missionNameByte));
 
+        int seqNum = 20;
+        System.out.println((byte)seqNum);
+        System.out.println((byte)(seqNum >> 0));
+        System.out.println((byte)(seqNum >> 8));
+        System.out.println((byte)(seqNum >> 16));
+        System.out.println((byte)(seqNum >> 24));
+        System.out.println((byte)(seqNum >> 0)^(byte)(seqNum >> 8)^(byte)(seqNum >> 16)^(byte)(seqNum >> 24));
     }
 
     public static List<TowerPoint> loadTower1(List<TowerPoint> towerList) {
