@@ -24,6 +24,7 @@ import hfd.msdk.model.WayPoint;
 
 import static hfd.msdk.hfdlibrary.HFDManager.logLevelType;
 import static hfd.msdk.hfdlibrary.HFDManager.sendErrorMessage;
+import static hfd.msdk.model.IConstants.loadTowerId;
 
 /**
  * Created by Arvin zeng on 19/12/20
@@ -196,6 +197,7 @@ public class FileUtils {
         for (int i = 0; i < towerList.size(); i++) {
             tempMarkPoint.clear();
             try {
+                loadTowerId = towerList.get(i).getId();
                 File file = new File(filePath + "/" + towerList.get(i).getTowerNum() + "A.xml");
                 //File file = new File("F:\\"+towerNames+".xml");
                 //System.out.println(file.getPath());

@@ -9,6 +9,8 @@ import java.util.List;
 
 import hfd.msdk.model.NewWayPoint;
 
+import static hfd.msdk.model.IConstants.loadTowerId;
+
 public class MySaxHandler extends DefaultHandler{
 
     private List<NewWayPoint> wayPoint;
@@ -57,7 +59,7 @@ public class MySaxHandler extends DefaultHandler{
             sb.append(temp);
             String data = sb.toString();
             if ("id".equals(tagName))
-                currentPoint.setId(data);
+                currentPoint.setId(loadTowerId);
             else if ("towerNum".equals(tagName))
                 currentPoint.setTowerNum(data);
             else if ("type".equals(tagName))
