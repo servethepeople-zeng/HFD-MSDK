@@ -93,7 +93,7 @@ public class FileUtils {
             logSize = logSize / 1024;
         }
         //MB
-        if (logSize > 20) {
+        if (logSize > 5) {
             return true;
         } else {
             return false;

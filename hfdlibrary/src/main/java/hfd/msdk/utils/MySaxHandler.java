@@ -58,10 +58,10 @@ public class MySaxHandler extends DefaultHandler{
             temp = temp.trim();
             sb.append(temp);
             String data = sb.toString();
-            if ("id".equals(tagName))
+            if ("id".equals(tagName)) {
                 currentPoint.setId(loadTowerId);
-            else if ("towerNum".equals(tagName))
-                currentPoint.setTowerNum(data);
+                currentPoint.setTowerNum("#"+data);
+            }
             else if ("type".equals(tagName))
                 currentPoint.setPointType(Integer.parseInt(data));
             else if ("variety".equals(tagName))

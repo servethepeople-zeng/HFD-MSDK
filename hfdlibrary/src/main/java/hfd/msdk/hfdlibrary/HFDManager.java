@@ -49,6 +49,7 @@ import hfd.msdk.mavlink.msg_YT_reset;
 import hfd.msdk.mavlink.msg_YT_sdegree;
 import hfd.msdk.mavlink.msg_cal_stop;
 import hfd.msdk.mavlink.msg_camera_auto_takepic;
+import hfd.msdk.mavlink.msg_camera_realzoom;
 import hfd.msdk.mavlink.msg_camera_zoom;
 import hfd.msdk.mavlink.msg_get_storage;
 import hfd.msdk.mavlink.msg_picture_press;
@@ -157,14 +158,15 @@ public class HFDManager {
     private float currentAltidude = 0, compassData = 0;
     private int battery1 = 0, battery2 = 0;
     private String missonName = "";
-    private Timer timer;
+    private Timer timer,zoomTimer = null;
+    private ZoomTimerTask zoomTimerTask = null;
     private int mtowerNum = 0, mseqNum = 0, mlatitude = 0, mlongtidude = 0, maltitude = 0, mtoward = 0, mpitch = 0, mangle = 0, atotal = 0;
     private KeyListener getDataListener = new KeyListener() {
         @Override
         public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
             if (newValue instanceof byte[]) {
                 byte[] data = (byte[]) newValue;
-                //Log.d("receivedata", "HFD receive data success! " + BytesToHexString(data, data.length));
+                Log.d("receivedata", "HFD receive data success! " + BytesToHexString(data, data.length));
                 FileUtils.writeLogFile(1, "receive data success1:" + Helper.byte2hex(data));
                 if (data.length > 7) {
                     if ("fd".equals(Integer.toHexString(data[0] & 0x0FF))) {
@@ -301,6 +303,7 @@ public class HFDManager {
                                             postWaypoint(3, dnum);
                                         }
                                     } else if ("66".equals(Integer.toHexString(data[5] & 0x0FF))) {
+                                        stopTimer();
                                         createMAVLink(13, 0);
                                     } else if ("42".equals(Integer.toHexString(data[5] & 0x0FF))) {
                                         int stroage = 0;
@@ -344,7 +347,10 @@ public class HFDManager {
         timer = new Timer();
         WarningTimerTask warningTimerTask = new WarningTimerTask();
         timer.schedule(warningTimerTask, 60000, 60000);
-        createMAVLink(13, 0);
+
+        zoomTimer = new Timer();
+        zoomTimerTask = new ZoomTimerTask();
+        zoomTimer.schedule(zoomTimerTask,1000,1000);
     }
 
     public static void main(String args[]) {
@@ -1117,7 +1123,7 @@ public class HFDManager {
         };
     }
 
-    public void sendUserData(byte[] data) {
+    public static void sendUserData(byte[] data) {
         final byte[] showData = data;
         KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
             @Override
@@ -1520,6 +1526,17 @@ public class HFDManager {
         DJIPayloadUsbDataManager.getInstance().setDataListener(null);
     }
 
+    private void stopTimer(){
+        if(zoomTimer != null){
+            zoomTimer.cancel();
+            zoomTimer = null;
+        }
+        if(zoomTimerTask != null){
+            zoomTimerTask.cancel();
+            zoomTimerTask = null;
+        }
+    }
+
 }
 
 class WarningTimerTask extends TimerTask {
@@ -1542,5 +1559,21 @@ class WarningTimerTask extends TimerTask {
         } catch (JSONException e) {
             FileUtils.writeLogFile(2, "timer run error is " + e.getMessage());
         }
+    }
+}
+
+/**
+ *初始化后每隔一秒发送意思获取zoom值信息，诱发天空端下发对时命令
+ * @author Arvin zeng
+ * @Time 2020-6-20 16:03
+ */
+class ZoomTimerTask extends TimerTask {
+    @Override
+    public void run() {
+        MAVLinkPacket packet = new MAVLinkPacket();
+        msg_camera_realzoom realzoom = new msg_camera_realzoom(packet);
+        packet = realzoom.pack();
+        packet.generateCRC();
+        HFDManager.sendUserData(packet.encodePacket());
     }
 }
