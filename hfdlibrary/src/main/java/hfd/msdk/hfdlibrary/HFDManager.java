@@ -10,6 +10,9 @@ import com.amap.api.maps.model.LatLng;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -158,9 +161,10 @@ public class HFDManager {
     private float currentAltidude = 0, compassData = 0;
     private int battery1 = 0, battery2 = 0;
     private String missonName = "";
-    private Timer timer,zoomTimer = null;
+    private Timer timer, zoomTimer = null;
     private ZoomTimerTask zoomTimerTask = null;
     private int mtowerNum = 0, mseqNum = 0, mlatitude = 0, mlongtidude = 0, maltitude = 0, mtoward = 0, mpitch = 0, mangle = 0, atotal = 0;
+    private List<String> picNameList = null;
     private KeyListener getDataListener = new KeyListener() {
         @Override
         public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
@@ -264,18 +268,18 @@ public class HFDManager {
 //                                                                                            //对比线侧
 //                                                                                            //Log.d("uploadfile", "线侧=" + (data[42] & 0x0FF));
 //                                                                                            FileUtils.writeLogFile(1, "线侧=" + (data[42] & 0x0FF));
-                                                                                            if ((data[42] & 0x0FF) == hfdWayPointList.get(pointNum).getSide()) {
-                                                                                                //对比识别点总数量
-                                                                                                atotal = 0;
-                                                                                                atotal |= (data[47] & 0xFF);
-                                                                                                atotal |= (data[48] & 0xFF) << 8;
-                                                                                                atotal |= (data[49] & 0xFF) << 16;
-                                                                                                atotal |= (data[50] & 0xFF) << 24;
-                                                                                                //Log.d("uploadfile", "识别点总数量=" + atotal);
-                                                                                                FileUtils.writeLogFile(1, "识别点总数量=" + atotal);
-                                                                                                if (atotal == hfdWayPointList.size())
-                                                                                                    postWaypoint(1, 0);
-                                                                                            }
+                                                                        if ((data[42] & 0x0FF) == hfdWayPointList.get(pointNum).getSide()) {
+                                                                            //对比识别点总数量
+                                                                            atotal = 0;
+                                                                            atotal |= (data[47] & 0xFF);
+                                                                            atotal |= (data[48] & 0xFF) << 8;
+                                                                            atotal |= (data[49] & 0xFF) << 16;
+                                                                            atotal |= (data[50] & 0xFF) << 24;
+                                                                            //Log.d("uploadfile", "识别点总数量=" + atotal);
+                                                                            FileUtils.writeLogFile(1, "识别点总数量=" + atotal);
+                                                                            if (atotal == hfdWayPointList.size())
+                                                                                postWaypoint(1, 0);
+                                                                        }
 /*                                                                                        }
                                                                                     }
                                                                                 }
@@ -301,6 +305,32 @@ public class HFDManager {
                                             dnum |= (data[9] & 0xFF) << 16;
                                             dnum |= (data[10] & 0xFF) << 24;
                                             postWaypoint(3, dnum);
+                                        } else if ("4".equals(Integer.toHexString(data[6] & 0x0FF))) {   //即将拍摄某个部件的照片
+                                            String resultName = "IDX";
+                                            int idx = 0;
+                                            idx |= (data[7] & 0xFF);
+                                            idx |= (data[8] & 0xFF) << 8;
+                                            idx |= (data[9] & 0xFF) << 16;
+                                            idx |= (data[10] & 0xFF) << 24;
+                                            resultName +=  String.format("%04d",idx) + "_";
+
+                                            int tn = 0;
+                                            tn |= (data[11] & 0xFF);
+                                            tn |= (data[12] & 0xFF) << 8;
+                                            tn |= (data[13] & 0xFF) << 16;
+                                            tn |= (data[14] & 0xFF) << 24;
+                                            resultName +=  "TN" + String.format("%04d",tn) + "_";
+
+                                            int side = data[15] & 0xFF;
+                                            resultName +=  "SIDE" + String.format("%02d",side) + "_";
+
+                                            int tg = data[16] & 0xFF;
+                                            resultName +=  "TG" + String.format("%02d",tg) + "_";
+
+                                            int attr = data[16] & 0xFF;
+                                            resultName +=  "ATTR" + String.format("%02d",attr);
+
+                                            picNameList.add(resultName);
                                         }
                                     } else if ("66".equals(Integer.toHexString(data[5] & 0x0FF))) {
                                         stopTimer();
@@ -350,7 +380,7 @@ public class HFDManager {
 
         zoomTimer = new Timer();
         zoomTimerTask = new ZoomTimerTask();
-        zoomTimer.schedule(zoomTimerTask,1000,1000);
+        zoomTimer.schedule(zoomTimerTask, 1000, 1000);
     }
 
     public static void main(String args[]) {
@@ -413,12 +443,26 @@ public class HFDManager {
 //        System.out.println(Helper.byte2hex(missionNameByte));
 
         int seqNum = 20;
-        System.out.println((byte)seqNum);
-        System.out.println((byte)(seqNum >> 0));
-        System.out.println((byte)(seqNum >> 8));
-        System.out.println((byte)(seqNum >> 16));
-        System.out.println((byte)(seqNum >> 24));
-        System.out.println((byte)(seqNum >> 0)^(byte)(seqNum >> 8)^(byte)(seqNum >> 16)^(byte)(seqNum >> 24));
+        System.out.println((byte) seqNum);
+        System.out.println((byte) (seqNum >> 0));
+        System.out.println((byte) (seqNum >> 8));
+        System.out.println((byte) (seqNum >> 16));
+        System.out.println((byte) (seqNum >> 24));
+        System.out.println((byte) (seqNum >> 0) ^ (byte) (seqNum >> 8) ^ (byte) (seqNum >> 16) ^ (byte) (seqNum >> 24));
+
+        NumberFormat nf = NumberFormat.getPercentInstance();
+        nf.setMinimumFractionDigits(0);//这个1的意识是保存结果到小数点后几位，但是特别声明：这个结果已经先＊100了。
+        DecimalFormat df = new DecimalFormat("0.00");
+        System.out.println(nf.format((float) 1 / 50));//自动四舍五入。
+
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        System.out.println(dateFormat.format(calendar.getTime()));
+        String resultName = "IDX";
+        int idx = 0;
+        resultName +=  String.format("%04d",idx);
+
+        System.out.println(resultName);
     }
 
     public static List<TowerPoint> loadTower1(List<TowerPoint> towerList) {
@@ -447,6 +491,25 @@ public class HFDManager {
         messServer.setInfomation((byte) 0, object);
 
         FileUtils.writeLogFile(2, mesContent);
+    }
+
+    public static void sendUserData(byte[] data) {
+        final byte[] showData = data;
+        KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
+            @Override
+            public void onSuccess() {
+                Log.d("senddata", "" + Helper.byte2hex(showData));
+                FileUtils.writeLogFile(1, "senddata success:" + Helper.byte2hex(showData));
+            }
+
+            @Override
+            public void onFailure(@NonNull DJIError error) {
+                //ToastUtils.setResultToToast("Not found payload device,please restart the app！");
+                //Log.d("senddata",""+Helper.byte2hex(showData));
+                sendErrorMessage("没有发现云台");
+                FileUtils.writeLogFile(1, "senddata fail:" + Helper.byte2hex(showData));
+            }
+        }, data);
     }
 
     public void takePhoto() {
@@ -696,7 +759,6 @@ public class HFDManager {
         return returnListMarkPoint;
     }
 
-
     public List<TowerPoint> loadMarkPoint(List<TowerPoint> towerList) {
         //flightController.startTakeoff();
         FileUtils.writeLogFile(0, "call loadMarkPoint() method.");
@@ -754,28 +816,7 @@ public class HFDManager {
             sendErrorMessage("航点数据为空");
         } else {
             pointNum = 0;
-            MAVLinkPacket packet = new MAVLinkPacket();
-            msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
-            pointUpload.towerNum = Integer.parseInt(hfdWayPointList.get(pointNum).getTowerNum().substring(1));
-            pointUpload.pointType = (byte) hfdWayPointList.get(pointNum).getPointType();
-            pointUpload.variety = (byte) hfdWayPointList.get(pointNum).getVariety();
-            pointUpload.seqNum = pointNum;
-            pointUpload.latitude = hfdWayPointList.get(pointNum).getLatitude();
-            pointUpload.longitude = hfdWayPointList.get(pointNum).getLongitude();
-            pointUpload.altitude = hfdWayPointList.get(pointNum).getAltitude();
-            pointUpload.toward = hfdWayPointList.get(pointNum).getToward();
-            pointUpload.pitch = hfdWayPointList.get(pointNum).getApitch();
-            pointUpload.angle = hfdWayPointList.get(pointNum).getAngle();
-            pointUpload.objType = (byte) hfdWayPointList.get(pointNum).getObject();
-            pointUpload.side = (byte) hfdWayPointList.get(pointNum).getSide();
-            pointUpload.trend = (byte) hfdWayPointList.get(pointNum).getOrientation();
-            pointUpload.leftZoomPosition = (byte) hfdWayPointList.get(pointNum).getLeftZoomPosition();
-            pointUpload.zoomPosition = (byte) hfdWayPointList.get(pointNum).getZoomPosition();
-            pointUpload.rightZoomPosition = (byte) hfdWayPointList.get(pointNum).getRightZoomPosition();
-            pointUpload.totalNum = hfdWayPointList.size();
-            packet = pointUpload.pack();
-            packet.generateCRC();
-            sendUserData(packet.encodePacket());
+            myUploadPoint();
         }
     }
 
@@ -1063,28 +1104,7 @@ public class HFDManager {
         if (actionType == 1) {
             pointNum++;
             if (pointNum < hfdWayPointList.size()) {
-                MAVLinkPacket packet = new MAVLinkPacket();
-                msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
-                pointUpload.towerNum = Integer.parseInt(hfdWayPointList.get(pointNum).getTowerNum().substring(1));
-                pointUpload.pointType = (byte) hfdWayPointList.get(pointNum).getPointType();
-                pointUpload.variety = (byte) hfdWayPointList.get(pointNum).getVariety();
-                pointUpload.seqNum = pointNum;
-                pointUpload.latitude = hfdWayPointList.get(pointNum).getLatitude();
-                pointUpload.longitude = hfdWayPointList.get(pointNum).getLongitude();
-                pointUpload.altitude = hfdWayPointList.get(pointNum).getAltitude();
-                pointUpload.toward = hfdWayPointList.get(pointNum).getToward();
-                pointUpload.pitch = hfdWayPointList.get(pointNum).getApitch();
-                pointUpload.angle = hfdWayPointList.get(pointNum).getAngle();
-                pointUpload.objType = (byte) hfdWayPointList.get(pointNum).getObject();
-                pointUpload.side = (byte) hfdWayPointList.get(pointNum).getSide();
-                pointUpload.trend = (byte) hfdWayPointList.get(pointNum).getOrientation();
-                pointUpload.leftZoomPosition = (byte) hfdWayPointList.get(pointNum).getLeftZoomPosition();
-                pointUpload.zoomPosition = (byte) hfdWayPointList.get(pointNum).getZoomPosition();
-                pointUpload.rightZoomPosition = (byte) hfdWayPointList.get(pointNum).getRightZoomPosition();
-                pointUpload.totalNum = hfdWayPointList.size();
-                packet = pointUpload.pack();
-                packet.generateCRC();
-                sendUserData(packet.encodePacket());
+                myUploadPoint();
             } else {
                 rebackMsg(7, "success", "上传航点成功");
             }
@@ -1100,8 +1120,10 @@ public class HFDManager {
             }
             messServer.setInfomation((byte) 15, object);
             FileUtils.writeLogFile(0, "");
-            if (seqNum == hfdWayPointList.size() - 1)
+            if (seqNum == hfdWayPointList.size() - 1) {
                 rebackMsg(15, "success", "巡检结束");
+                rebackMsg(15, "picNameList", picNameList);
+            }
         }
     }
 
@@ -1121,25 +1143,6 @@ public class HFDManager {
                 ToastUtils.setResultToToast(var1.getDescription());
             }
         };
-    }
-
-    public static void sendUserData(byte[] data) {
-        final byte[] showData = data;
-        KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
-            @Override
-            public void onSuccess() {
-                Log.d("senddata", "" + Helper.byte2hex(showData));
-                FileUtils.writeLogFile(1, "senddata success:" + Helper.byte2hex(showData));
-            }
-
-            @Override
-            public void onFailure(@NonNull DJIError error) {
-                //ToastUtils.setResultToToast("Not found payload device,please restart the app！");
-                //Log.d("senddata",""+Helper.byte2hex(showData));
-                sendErrorMessage("没有发现云台");
-                FileUtils.writeLogFile(1, "senddata fail:" + Helper.byte2hex(showData));
-            }
-        }, data);
     }
 
     private void createMAVLink(int type, int content) {
@@ -1499,6 +1502,16 @@ public class HFDManager {
         FileUtils.writeLogFile(2, noteLog);
     }
 
+    private void rebackMsg(int type, String rebackContent, List<String> mPicNameList) {
+        try {
+            object.put(rebackContent, mPicNameList);
+        } catch (Exception e) {
+            object = null;
+        }
+        messServer.setInfomation((byte) type, object);
+        FileUtils.writeLogFile(2, "返回拍照名称列表:"+mPicNameList.toString());
+    }
+
     private JSONObject getWindWarning() {
         FileUtils.writeLogFile(0, "call getWindWarning() method.");
         JSONObject dataObject = new JSONObject();
@@ -1526,17 +1539,41 @@ public class HFDManager {
         DJIPayloadUsbDataManager.getInstance().setDataListener(null);
     }
 
-    private void stopTimer(){
-        if(zoomTimer != null){
+    private void stopTimer() {
+        if (zoomTimer != null) {
             zoomTimer.cancel();
             zoomTimer = null;
         }
-        if(zoomTimerTask != null){
+        if (zoomTimerTask != null) {
             zoomTimerTask.cancel();
             zoomTimerTask = null;
         }
     }
 
+    private void myUploadPoint() {
+        MAVLinkPacket packet = new MAVLinkPacket();
+        msg_waypoint_upload pointUpload = new msg_waypoint_upload(packet);
+        pointUpload.towerNum = Integer.parseInt(hfdWayPointList.get(pointNum).getTowerNum().substring(1));
+        pointUpload.pointType = (byte) hfdWayPointList.get(pointNum).getPointType();
+        pointUpload.variety = (byte) hfdWayPointList.get(pointNum).getVariety();
+        pointUpload.seqNum = pointNum;
+        pointUpload.latitude = hfdWayPointList.get(pointNum).getLatitude();
+        pointUpload.longitude = hfdWayPointList.get(pointNum).getLongitude();
+        pointUpload.altitude = hfdWayPointList.get(pointNum).getAltitude();
+        pointUpload.toward = hfdWayPointList.get(pointNum).getToward();
+        pointUpload.pitch = hfdWayPointList.get(pointNum).getApitch();
+        pointUpload.angle = hfdWayPointList.get(pointNum).getAngle();
+        pointUpload.objType = (byte) hfdWayPointList.get(pointNum).getObject();
+        pointUpload.side = (byte) hfdWayPointList.get(pointNum).getSide();
+        pointUpload.trend = (byte) hfdWayPointList.get(pointNum).getOrientation();
+        pointUpload.leftZoomPosition = (byte) hfdWayPointList.get(pointNum).getLeftZoomPosition();
+        pointUpload.zoomPosition = (byte) hfdWayPointList.get(pointNum).getZoomPosition();
+        pointUpload.rightZoomPosition = (byte) hfdWayPointList.get(pointNum).getRightZoomPosition();
+        pointUpload.totalNum = hfdWayPointList.size();
+        packet = pointUpload.pack();
+        packet.generateCRC();
+        sendUserData(packet.encodePacket());
+    }
 }
 
 class WarningTimerTask extends TimerTask {
@@ -1563,7 +1600,8 @@ class WarningTimerTask extends TimerTask {
 }
 
 /**
- *初始化后每隔一秒发送意思获取zoom值信息，诱发天空端下发对时命令
+ * 初始化后每隔一秒发送意思获取zoom值信息，诱发天空端下发对时命令
+ *
  * @author Arvin zeng
  * @Time 2020-6-20 16:03
  */
