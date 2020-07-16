@@ -512,6 +512,25 @@ public class HFDManager {
         }, data);
     }
 
+    public static void sendUserData1(byte[] data) {
+        final byte[] showData = data;
+        KeyManager.getInstance().performAction(sendDataKey, new ActionCallback() {
+            @Override
+            public void onSuccess() {
+                Log.d("senddata", "success----" + Helper.byte2hex(showData));
+                FileUtils.writeLogFile(1, "senddata success:" + Helper.byte2hex(showData));
+            }
+
+            @Override
+            public void onFailure(@NonNull DJIError error) {
+                //ToastUtils.setResultToToast("Not found payload device,please restart the app！");
+                Log.d("senddata","fail----"+Helper.byte2hex(showData));
+                //sendErrorMessage("没有发现云台");
+                FileUtils.writeLogFile(1, "senddata fail:" + Helper.byte2hex(showData));
+            }
+        }, data);
+    }
+
     public void takePhoto() {
         createMAVLink(1, 0);
         FileUtils.writeLogFile(0, "call takePhoto() method.");
