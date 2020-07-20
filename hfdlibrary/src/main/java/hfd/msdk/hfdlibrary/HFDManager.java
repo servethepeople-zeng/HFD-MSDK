@@ -328,7 +328,7 @@ public class HFDManager {
                                             resultName +=  "TG" + String.format("%02d",tg) + "_";
 
                                             int attr = data[16] & 0xFF;
-                                            resultName +=  "ATTR" + String.format("%02d",attr);
+                                            resultName +=  "ATTR" + String.format("%02d",attr)+".jpg";
 
                                             picNameList.add(resultName);
                                         }
@@ -342,6 +342,7 @@ public class HFDManager {
                                         stroage |= (data[9] & 0xFF) << 8;
                                         stroage |= (data[10] & 0xFF);
                                         try {
+                                            object = null;
                                             object.put("totalStorage", (data[6] & 0x0FF) + "G");
                                             object.put("remainStorage", stroage + "M");
                                         } catch (Exception e) {
@@ -483,6 +484,7 @@ public class HFDManager {
     }
 
     public static void sendErrorMessage(String mesContent) {
+        object = null;
         try {
             object.put("errorMsg", mesContent);
         } catch (Exception e) {
@@ -854,6 +856,7 @@ public class HFDManager {
                     @Override
                     public void onResult(DJIError djiError) {
                         if (djiError == null) {
+                            object = null;
                             try {
                                 object.put("result", "success");
                             } catch (Exception e) {
@@ -883,6 +886,7 @@ public class HFDManager {
                     @Override
                     public void onResult(DJIError djiError) {
                         if (djiError == null) {
+                            object = null;
                             try {
                                 object.put("result", "start");
                                 object.put("tower", realPoint.getTowerNum());
@@ -1130,6 +1134,7 @@ public class HFDManager {
         } else if (actionType == 2) {
             rebackMsg(7, "fail", "天空端返回收到航点信息有误 ");
         } else {
+            object = null;
             try {
                 object.put("result", "start");
                 object.put("tower", hfdWayPointList.get(seqNum).getId());
@@ -1512,6 +1517,7 @@ public class HFDManager {
     }
 
     private void rebackMsg(int type, String rebackContent, String noteLog) {
+        object = null;
         try {
             object.put("result", rebackContent);
         } catch (Exception e) {
@@ -1523,6 +1529,8 @@ public class HFDManager {
 
     private void rebackMsg(int type, String rebackContent, List<String> mPicNameList) {
         try {
+            object = null;
+            object.put("result", "picname");
             object.put(rebackContent, mPicNameList);
         } catch (Exception e) {
             object = null;
