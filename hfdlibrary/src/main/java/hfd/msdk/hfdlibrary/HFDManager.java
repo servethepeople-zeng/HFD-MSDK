@@ -1646,6 +1646,6 @@ class ZoomTimerTask extends TimerTask {
         msg_camera_realzoom realzoom = new msg_camera_realzoom(packet);
         packet = realzoom.pack();
         packet.generateCRC();
-        HFDManager.sendUserData(packet.encodePacket());
+        HFDManager.sendUserData1(packet.encodePacket());
     }
 }
