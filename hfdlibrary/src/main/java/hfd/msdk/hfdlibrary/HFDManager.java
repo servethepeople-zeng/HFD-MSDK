@@ -464,6 +464,12 @@ public class HFDManager {
         resultName +=  String.format("%04d",idx);
 
         System.out.println(resultName);
+        List<String> picNameList1 = null;
+        picNameList1 = new ArrayList<>();
+        picNameList1.add("a");
+        picNameList1.add("b");
+        System.out.println(picNameList1.toString());
+        picNameList1.toString();
     }
 
     public static List<TowerPoint> loadTower1(List<TowerPoint> towerList) {
@@ -787,6 +793,7 @@ public class HFDManager {
     }
 
     public void oneButtonStart() {
+        picNameList = new ArrayList<String>();
         MAVLinkPacket packet = new MAVLinkPacket();
         msg_camera_auto_takepic autoTakepic = new msg_camera_auto_takepic(packet);
         autoTakepic.autoNum = (byte) 1;
