@@ -148,7 +148,7 @@ public class HFDManager {
     public static List<TowerPoint> tempPointList = new ArrayList<TowerPoint>();
     public static FlightControllerState mFControlState;
     private static DJIKey getDataKey, sendDataKey;
-    private static JSONObject object;
+    private static JSONObject object = new JSONObject();
     public List<NewWayPoint> hfdWayPointList = new ArrayList<NewWayPoint>();
     //获取飞机
     private Aircraft aircraft = null;
@@ -343,11 +343,11 @@ public class HFDManager {
                                         stroage |= (data[9] & 0xFF) << 8;
                                         stroage |= (data[10] & 0xFF);
                                         try {
-                                            object = null;
+                                            object = new JSONObject();
                                             object.put("totalStorage", (data[6] & 0x0FF) + "G");
                                             object.put("remainStorage", stroage + "M");
                                         } catch (Exception e) {
-                                            object = null;
+                                            object = new JSONObject();
                                         }
                                         messServer.setInfomation((byte) 2, object);
                                         FileUtils.writeLogFile(0, object.toString());
@@ -375,7 +375,7 @@ public class HFDManager {
         getFlightThread();
         initDJIkey();
         this.messServer = messServer;
-        object = new JSONObject();
+
         FileUtils.initLogFile();
         FileUtils.writeLogFile(0, "HFDManager init success.");
         timer = new Timer();
@@ -493,11 +493,11 @@ public class HFDManager {
     }
 
     public static void sendErrorMessage(String mesContent) {
-        object = null;
+        object = new JSONObject();
         try {
             object.put("errorMsg", mesContent);
         } catch (Exception e) {
-            object = null;
+            object = new JSONObject();
         }
         messServer.setInfomation((byte) 0, object);
 
@@ -796,6 +796,7 @@ public class HFDManager {
     }
 
     public void oneButtonStart() {
+        FileUtils.writeLogFile(0, "call oneButtonStart() method.");
         picNameList = new ArrayList<String>();
         MAVLinkPacket packet = new MAVLinkPacket();
         msg_camera_auto_takepic autoTakepic = new msg_camera_auto_takepic(packet);
@@ -866,11 +867,11 @@ public class HFDManager {
                     @Override
                     public void onResult(DJIError djiError) {
                         if (djiError == null) {
-                            object = null;
+                            object = new JSONObject();
                             try {
                                 object.put("result", "success");
                             } catch (Exception e) {
-                                object = null;
+                                object = new JSONObject();
                             }
                             messServer.setInfomation((byte) 7, object);
                             FileUtils.writeLogFile(0, "end uploadPoint()");
@@ -896,13 +897,13 @@ public class HFDManager {
                     @Override
                     public void onResult(DJIError djiError) {
                         if (djiError == null) {
-                            object = null;
+                            object = new JSONObject();
                             try {
                                 object.put("result", "start");
                                 object.put("tower", realPoint.getTowerNum());
                                 object.put("point", realPoint.getId());
                             } catch (Exception e) {
-                                object = null;
+                                object = new JSONObject();
                             }
                             messServer.setInfomation((byte) 15, object);
                             FileUtils.writeLogFile(0, "");
@@ -1144,13 +1145,13 @@ public class HFDManager {
         } else if (actionType == 2) {
             rebackMsg(7, "fail", "天空端返回收到航点信息有误 ");
         } else {
-            object = null;
+            object = new JSONObject();
             try {
                 object.put("result", "start");
                 object.put("tower", hfdWayPointList.get(seqNum).getId());
                 object.put("point", hfdWayPointList.get(seqNum).getSeqNumber());
             } catch (Exception e) {
-                object = null;
+                object = new JSONObject();
             }
             messServer.setInfomation((byte) 15, object);
             FileUtils.writeLogFile(0, "");
@@ -1534,11 +1535,11 @@ public class HFDManager {
     }
 
     private void rebackMsg(int type, String rebackContent, String noteLog) {
-        object = null;
+        object = new JSONObject();
         try {
             object.put("result", rebackContent);
         } catch (Exception e) {
-            object = null;
+            object = new JSONObject();
         }
         messServer.setInfomation((byte) type, object);
         FileUtils.writeLogFile(2, noteLog);
@@ -1546,11 +1547,11 @@ public class HFDManager {
 
     private void rebackMsg(int type, String rebackContent, List<String> mPicNameList) {
         try {
-            object = null;
+            object = new JSONObject();
             object.put("result", "picname");
             object.put(rebackContent, mPicNameList);
         } catch (Exception e) {
-            object = null;
+            object = new JSONObject();
         }
         messServer.setInfomation((byte) type, object);
         FileUtils.writeLogFile(2, "返回拍照名称列表:"+mPicNameList.toString());

@@ -6,7 +6,7 @@ package hfd.msdk.mavlink;
 
 public class msg_gimbal_version extends MAVLinkMessage {
 
-    public static final int MAVLINK_MSG_ID_GIMBAL_VERSION = 75;
+    public static final int MAVLINK_MSG_ID_GIMBAL_VERSION = 74;
     public static final int MAVLINK_MSG_LENGTH = 1;
 
     public byte type;
