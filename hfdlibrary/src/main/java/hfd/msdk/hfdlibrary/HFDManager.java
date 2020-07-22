@@ -10,9 +10,6 @@ import com.amap.api.maps.model.LatLng;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -393,7 +390,7 @@ public class HFDManager {
     }
 
     public static void main(String args[]) {
-        List<WayPoint> mwaypoints = new ArrayList<WayPoint>();
+        /*List<WayPoint> mwaypoints = new ArrayList<WayPoint>();
 
         List<TowerPoint> towerLists = new ArrayList<TowerPoint>();
         TowerPoint tower1 = new TowerPoint();
@@ -429,7 +426,7 @@ public class HFDManager {
 
         for (int i = towerLists.size() - 1; i >= 0; i--) {
             System.out.println(towerLists.get(i).getTowerNumber());
-        }
+        }*/
 //        mwaypoints = FileUtils.loadXml(towerLists);
 //        System.out.println(mwaypoints.size());
 //        for (int i = 0; i < mwaypoints.size(); i++) {
@@ -451,7 +448,7 @@ public class HFDManager {
 //        missionNameByte[missonName.length()+7] = (byte)84;
 //        System.out.println(Helper.byte2hex(missionNameByte));
 
-        int seqNum = 20;
+/*        int seqNum = 20;
         System.out.println((byte) seqNum);
         System.out.println((byte) (seqNum >> 0));
         System.out.println((byte) (seqNum >> 8));
@@ -477,7 +474,7 @@ public class HFDManager {
         picNameList1.add("a");
         picNameList1.add("b");
 
-        picNameList1.toString();
+        picNameList1.toString();*/
     }
 
     public static List<TowerPoint> loadTower1(List<TowerPoint> towerList) {
