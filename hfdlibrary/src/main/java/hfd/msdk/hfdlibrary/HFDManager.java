@@ -55,6 +55,7 @@ import hfd.msdk.mavlink.msg_camera_auto_takepic;
 import hfd.msdk.mavlink.msg_camera_realzoom;
 import hfd.msdk.mavlink.msg_camera_zoom;
 import hfd.msdk.mavlink.msg_get_storage;
+import hfd.msdk.mavlink.msg_gimbal_version;
 import hfd.msdk.mavlink.msg_picture_press;
 import hfd.msdk.mavlink.msg_picture_zoom;
 import hfd.msdk.mavlink.msg_radio_end;
@@ -350,6 +351,8 @@ public class HFDManager {
                                         }
                                         messServer.setInfomation((byte) 2, object);
                                         FileUtils.writeLogFile(0, object.toString());
+                                    }else if("4a".equals(Integer.toHexString(data[5] & 0x0FF))){
+                                        createMAVLink(14, 0);
                                     }
                                 } else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
                                     //反馈命令处理 以下表示拍照完成
@@ -1300,6 +1303,13 @@ public class HFDManager {
                 byte[] calibrationByte = packet.encodePacket();
                 sendUserData(calibrationByte);
                 break;
+            case 14:
+                msg_gimbal_version gimbalVersion = new msg_gimbal_version(packet);
+                gimbalVersion.type = (byte) 1;
+                packet = gimbalVersion.pack();
+                packet.generateCRC();
+                sendUserData(packet.encodePacket());
+                break;
         }
     }
 
@@ -1634,7 +1644,7 @@ class WarningTimerTask extends TimerTask {
 }
 
 /**
- * 初始化后每隔一秒发送意思获取zoom值信息，诱发天空端下发对时命令
+ * 初始化后每隔一秒发送一次获取zoom值信息，诱发天空端下发对时命令
  *
  * @author Arvin zeng
  * @Time 2020-6-20 16:03
