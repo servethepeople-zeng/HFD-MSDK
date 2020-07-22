@@ -165,7 +165,7 @@ public class HFDManager {
     private Timer timer, zoomTimer = null;
     private ZoomTimerTask zoomTimerTask = null;
     private int mtowerNum = 0, mseqNum = 0, mlatitude = 0, mlongtidude = 0, maltitude = 0, mtoward = 0, mpitch = 0, mangle = 0, atotal = 0;
-    private List<String> picNameList = null;
+    public List<String> picNameList;
     private KeyListener getDataListener = new KeyListener() {
         @Override
         public void onValueChange(@Nullable Object oldValue, @Nullable final Object newValue) {
@@ -331,7 +331,11 @@ public class HFDManager {
                                             int attr = data[16] & 0xFF;
                                             resultName +=  "ATTR" + String.format("%02d",attr)+".jpg";
 
+                                            FileUtils.writeLogFile(0, "picName = "+resultName);
+
                                             picNameList.add(resultName);
+
+                                            FileUtils.writeLogFile(0, picNameList.toString());
                                         }
                                     } else if ("66".equals(Integer.toHexString(data[5] & 0x0FF))) {
                                         stopTimer();
@@ -378,6 +382,7 @@ public class HFDManager {
 
         FileUtils.initLogFile();
         FileUtils.writeLogFile(0, "HFDManager init success.");
+        picNameList = new ArrayList<String>();
         timer = new Timer();
         WarningTimerTask warningTimerTask = new WarningTimerTask();
         timer.schedule(warningTimerTask, 60000, 60000);
@@ -471,7 +476,7 @@ public class HFDManager {
         picNameList1 = new ArrayList<>();
         picNameList1.add("a");
         picNameList1.add("b");
-        System.out.println(picNameList1.toString());
+
         picNameList1.toString();
     }
 
@@ -797,7 +802,7 @@ public class HFDManager {
 
     public void oneButtonStart() {
         FileUtils.writeLogFile(0, "call oneButtonStart() method.");
-        picNameList = new ArrayList<String>();
+        picNameList.clear();
         MAVLinkPacket packet = new MAVLinkPacket();
         msg_camera_auto_takepic autoTakepic = new msg_camera_auto_takepic(packet);
         autoTakepic.autoNum = (byte) 1;
@@ -1154,7 +1159,7 @@ public class HFDManager {
                 object = new JSONObject();
             }
             messServer.setInfomation((byte) 15, object);
-            FileUtils.writeLogFile(0, "");
+            //FileUtils.writeLogFile(0, "");
             if (seqNum == hfdWayPointList.size() - 1) {
                 rebackMsg(15, "success", "巡检结束");
                 rebackMsg(15, "picNameList", picNameList);
