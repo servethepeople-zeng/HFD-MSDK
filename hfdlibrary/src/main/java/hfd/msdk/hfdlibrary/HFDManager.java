@@ -303,7 +303,29 @@ public class HFDManager {
                                             dnum |= (data[9] & 0xFF) << 16;
                                             dnum |= (data[10] & 0xFF) << 24;
                                             postWaypoint(3, dnum);
-                                        } else if ("4".equals(Integer.toHexString(data[6] & 0x0FF))) {   //即将拍摄某个部件的照片
+                                        }
+                                    } else if ("66".equals(Integer.toHexString(data[5] & 0x0FF))) {
+                                        stopTimer();
+                                        createMAVLink(13, 0);
+                                    } else if ("42".equals(Integer.toHexString(data[5] & 0x0FF))) {
+                                        int stroage = 0;
+                                        stroage |= (data[7] & 0xFF) << 24;
+                                        stroage |= (data[8] & 0xFF) << 16;
+                                        stroage |= (data[9] & 0xFF) << 8;
+                                        stroage |= (data[10] & 0xFF);
+                                        try {
+                                            object = new JSONObject();
+                                            object.put("totalStorage", (data[6] & 0x0FF) + "G");
+                                            object.put("remainStorage", stroage + "M");
+                                        } catch (Exception e) {
+                                            object = new JSONObject();
+                                        }
+                                        messServer.setInfomation((byte) 2, object);
+                                        FileUtils.writeLogFile(0, object.toString());
+                                    }else if("4a".equals(Integer.toHexString(data[5] & 0x0FF))){
+                                        createMAVLink(14, 0);
+                                    }else if("17".equals(Integer.toHexString(data[5] & 0x0FF))){
+                                        if ("4".equals(Integer.toHexString(data[6] & 0x0FF))) {   //即将拍摄某个部件的照片
                                             String resultName = "IDX";
                                             int idx = 0;
                                             idx |= (data[7] & 0xFF);
@@ -334,26 +356,6 @@ public class HFDManager {
 
                                             FileUtils.writeLogFile(0, picNameList.toString());
                                         }
-                                    } else if ("66".equals(Integer.toHexString(data[5] & 0x0FF))) {
-                                        stopTimer();
-                                        createMAVLink(13, 0);
-                                    } else if ("42".equals(Integer.toHexString(data[5] & 0x0FF))) {
-                                        int stroage = 0;
-                                        stroage |= (data[7] & 0xFF) << 24;
-                                        stroage |= (data[8] & 0xFF) << 16;
-                                        stroage |= (data[9] & 0xFF) << 8;
-                                        stroage |= (data[10] & 0xFF);
-                                        try {
-                                            object = new JSONObject();
-                                            object.put("totalStorage", (data[6] & 0x0FF) + "G");
-                                            object.put("remainStorage", stroage + "M");
-                                        } catch (Exception e) {
-                                            object = new JSONObject();
-                                        }
-                                        messServer.setInfomation((byte) 2, object);
-                                        FileUtils.writeLogFile(0, object.toString());
-                                    }else if("4a".equals(Integer.toHexString(data[5] & 0x0FF))){
-                                        createMAVLink(14, 0);
                                     }
                                 } else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
                                     //反馈命令处理 以下表示拍照完成
@@ -531,7 +533,7 @@ public class HFDManager {
             @Override
             public void onSuccess() {
                 Log.d("senddata", "success----" + Helper.byte2hex(showData));
-                FileUtils.writeLogFile(1, "senddata success:" + Helper.byte2hex(showData));
+                //FileUtils.writeLogFile(1, "senddata success:" + Helper.byte2hex(showData));
             }
 
             @Override
@@ -539,7 +541,7 @@ public class HFDManager {
                 //ToastUtils.setResultToToast("Not found payload device,please restart the app！");
                 Log.d("senddata","fail----"+Helper.byte2hex(showData));
                 //sendErrorMessage("没有发现云台");
-                FileUtils.writeLogFile(1, "senddata fail:" + Helper.byte2hex(showData));
+                //FileUtils.writeLogFile(1, "senddata fail:" + Helper.byte2hex(showData));
             }
         }, data);
     }
