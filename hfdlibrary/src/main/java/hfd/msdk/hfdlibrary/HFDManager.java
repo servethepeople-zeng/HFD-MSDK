@@ -347,8 +347,8 @@ public class HFDManager {
                                             int tg = data[16] & 0xFF;
                                             resultName +=  "TG" + String.format("%02d",tg) + "_";
 
-                                            int attr = data[16] & 0xFF;
-                                            resultName +=  "ATTR" + String.format("%02d",attr)+".jpg";
+                                            int attr = data[17] & 0xFF;
+                                            resultName +=  "ATTR" + String.format("%04d",attr)+".jpg";
 
                                             FileUtils.writeLogFile(0, "picName = "+resultName);
 
