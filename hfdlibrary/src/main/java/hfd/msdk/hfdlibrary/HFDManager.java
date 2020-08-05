@@ -38,7 +38,6 @@ import dji.keysdk.callback.ActionCallback;
 import dji.keysdk.callback.KeyListener;
 import dji.midware.data.manager.P3.DJIPayloadUsbDataManager;
 import dji.sdk.flightcontroller.FlightController;
-import dji.sdk.mission.MissionControl;
 import dji.sdk.mission.waypoint.WaypointMissionOperator;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
@@ -350,11 +349,10 @@ public class HFDManager {
                                             int attr = data[17] & 0xFF;
                                             resultName +=  "ATTR" + String.format("%04d",attr)+".jpg";
 
-                                            FileUtils.writeLogFile(0, "picName = "+resultName);
-
                                             picNameList.add(resultName);
 
-                                            FileUtils.writeLogFile(0, picNameList.toString());
+                                            FileUtils.writeLogFile(0, "picName = "+resultName);
+                                            //FileUtils.writeLogFile(0, picNameList.toString());
                                         }
                                     }
                                 } else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
@@ -926,7 +924,7 @@ public class HFDManager {
 
     public void pauseMission() {
         FileUtils.writeLogFile(0, "call pauseMission() method.");
-        if (waypointMissionOperator == null) {
+/*        if (waypointMissionOperator == null) {
             waypointMissionOperator = MissionControl.getInstance().getWaypointMissionOperator();
         }
         if (WaypointMissionState.EXECUTING.equals(waypointMissionOperator.getCurrentState())) {
@@ -942,12 +940,13 @@ public class HFDManager {
             });
         } else {
             rebackMsg(9, "飞机状态错误，不能执行暂停飞行方法", "call pauseMission() 无法执行暂停方法，飞机当前状态为" + waypointMissionOperator.getCurrentState());
-        }
+        }*/
+        createMAVLink(12, 1);
     }
 
     public void resumeMission() {
         FileUtils.writeLogFile(0, "call resumeMission() method.");
-        if (WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())) {
+/*        if (WaypointMissionState.EXECUTION_PAUSED.equals(waypointMissionOperator.getCurrentState())) {
             waypointMissionOperator.resumeMission(new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
@@ -960,7 +959,8 @@ public class HFDManager {
             });
         } else {
             rebackMsg(10, "飞机状态错误，不能继续航点飞行", "call resumeMission() 无法执行继续飞行方法，飞机当前状态为" + waypointMissionOperator.getCurrentState());
-        }
+        }*/
+        createMAVLink(12, 2);
     }
 
     public void breakpointMission() {
@@ -991,7 +991,7 @@ public class HFDManager {
 //        }else{
 //            rebackMsg(12,"飞机状态错误，无法执行停止航线飞行操作","call resumeMission() 无法执行继续飞行方法，飞机当前状态为"+waypointMissionOperator.getCurrentState());
 //        }
-        createMAVLink(12, 0);
+        createMAVLink(12, 3);
     }
 
     public void startGoHome() {
@@ -1163,6 +1163,9 @@ public class HFDManager {
                 rebackMsg(15, "success", "巡检结束");
                 rebackMsg(15, "picNameList", picNameList);
             }
+            if(seqNum == 2){
+                stopTimer();
+            }
         }
     }
 
@@ -1283,6 +1286,7 @@ public class HFDManager {
                 break;
             case 12:
                 msg_cal_stop calStop = new msg_cal_stop(packet);
+                calStop.orderByte = (byte) content;
                 packet = calStop.pack();
                 packet.generateCRC();
                 sendUserData(packet.encodePacket());

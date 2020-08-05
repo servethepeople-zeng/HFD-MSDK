@@ -6,8 +6,10 @@ package hfd.msdk.mavlink;
 
 public class msg_cal_stop extends MAVLinkMessage {
 
-    public static final int MAVLINK_MSG_ID_CAL_STOP = 10;
-    public static final int MAVLINK_MSG_LENGTH = 0;
+    public static final int MAVLINK_MSG_ID_CAL_STOP = 76;
+    public static final int MAVLINK_MSG_LENGTH = 1;
+
+    public byte orderByte;
 
     public msg_cal_stop(MAVLinkPacket mavLinkPacket) {
         this.sysid = mavLinkPacket.sysid;
@@ -23,11 +25,13 @@ public class msg_cal_stop extends MAVLinkMessage {
         packet.sysid = 255;
         packet.compid = 190;
         packet.msgid = MAVLINK_MSG_ID_CAL_STOP;
+        packet.payload.putByte(orderByte);
         return packet;
     }
 
     @Override
     public void unpack(MAVLinkPayload payload) {
         payload.resetIndex();
+        this.orderByte = payload.getByte();
     }
 }
