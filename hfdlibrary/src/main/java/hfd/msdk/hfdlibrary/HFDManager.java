@@ -325,7 +325,7 @@ public class HFDManager {
                                         createMAVLink(14, 0);
                                     }else if("17".equals(Integer.toHexString(data[5] & 0x0FF))){
                                         if ("4".equals(Integer.toHexString(data[6] & 0x0FF))) {   //即将拍摄某个部件的照片
-                                            String resultName = "IDX";
+                                            String resultName = "ID";
                                             int idx = 0;
                                             idx |= (data[7] & 0xFF);
                                             idx |= (data[8] & 0xFF) << 8;
