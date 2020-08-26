@@ -20,7 +20,6 @@ import dji.common.battery.BatteryState;
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.FlightControllerState;
 import dji.common.flightcontroller.FlightWindWarning;
-import dji.common.flightcontroller.RTKState;
 import dji.common.mission.waypoint.Waypoint;
 import dji.common.mission.waypoint.WaypointAction;
 import dji.common.mission.waypoint.WaypointActionType;
@@ -355,6 +354,8 @@ public class HFDManager {
                                             FileUtils.writeLogFile(0, "picName = "+resultName);
                                             //FileUtils.writeLogFile(0, picNameList.toString());
                                         }
+                                    }else if("4c".equals(Integer.toHexString(data[5] & 0x0FF))){
+                                        rebackMsg(19, "applyGoHome", "申请返航");
                                     }
                                 } else if ("bf".equals(Integer.toHexString(data[4] & 0x0FF))) {
                                     //反馈命令处理 以下表示拍照完成
@@ -801,37 +802,37 @@ public class HFDManager {
     public void oneButtonStart() {
         FileUtils.writeLogFile(0, "call oneButtonStart() method.");
 
-        if (flightController.getRTK() != null){
-            flightController.getRTK().setStateCallback(new RTKState.Callback() {
-                @Override
-                public void onUpdate(RTKState rtkState) {
-
-                    flightController.setHomeLocation(new LocationCoordinate2D(rtkState.getFusionMobileStationLocation().getLatitude(), rtkState.getFusionMobileStationLocation().getLongitude()), new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            if(djiError == null)
-                                FileUtils.writeLogFile(0, "设置home点成功.");
-                            else
-                                FileUtils.writeLogFile(0, "设置rtk home点失败，注意飞行安全.");
-                            MAVLinkPacket packet = new MAVLinkPacket();
-                            msg_camera_auto_takepic autoTakepic = new msg_camera_auto_takepic(packet);
-                            autoTakepic.autoNum = (byte) 1;
-                            packet = autoTakepic.pack();
-                            packet.generateCRC();
-                            sendUserData(packet.encodePacket());
-                        }
-                    });
-                }
-            });
-        }else{
+//        if (flightController.getRTK() != null){
+//            flightController.getRTK().setStateCallback(new RTKState.Callback() {
+//                @Override
+//                public void onUpdate(RTKState rtkState) {
+//
+//                    flightController.setHomeLocation(new LocationCoordinate2D(rtkState.getFusionMobileStationLocation().getLatitude(), rtkState.getFusionMobileStationLocation().getLongitude()), new CommonCallbacks.CompletionCallback() {
+//                        @Override
+//                        public void onResult(DJIError djiError) {
+//                            if(djiError == null)
+//                                FileUtils.writeLogFile(0, "设置home点成功.");
+//                            else
+//                                FileUtils.writeLogFile(0, "设置rtk home点失败，注意飞行安全.");
+//                            MAVLinkPacket packet = new MAVLinkPacket();
+//                            msg_camera_auto_takepic autoTakepic = new msg_camera_auto_takepic(packet);
+//                            autoTakepic.autoNum = (byte) 1;
+//                            packet = autoTakepic.pack();
+//                            packet.generateCRC();
+//                            sendUserData(packet.encodePacket());
+//                        }
+//                    });
+//                }
+//            });
+//        }else{
             MAVLinkPacket packet = new MAVLinkPacket();
             msg_camera_auto_takepic autoTakepic = new msg_camera_auto_takepic(packet);
             autoTakepic.autoNum = (byte) 1;
             packet = autoTakepic.pack();
             packet.generateCRC();
             sendUserData(packet.encodePacket());
-            FileUtils.writeLogFile(1, "无法获取RTK数据，请注意飞行安全.");
-        }
+//            FileUtils.writeLogFile(1, "无法获取RTK数据，请注意飞行安全.");
+//        }
 
         picNameList.clear();
     }
@@ -1111,6 +1112,10 @@ public class HFDManager {
 
     public void setLogLevel(int mLogLevel) {
         logLevelType = mLogLevel;
+    }
+
+    public void allowGoHome(){
+        createMAVLink(12, 5);
     }
 
     private void getFlightThread() {
