@@ -4,7 +4,13 @@ import android.app.Activity;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -94,6 +100,25 @@ public class Helper {
             }
         }
         return getString(bytes, "GBK");
+    }
+
+    /**
+     * 将byte数组转成string
+     *
+     * @param bytes 数组
+     * @return String
+     */
+    public static String byteToString(byte[] bytes) {
+        if (null == bytes || bytes.length == 0) {
+            return "";
+        }
+        String strContent = "";
+        try {
+            strContent = new String(bytes, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return strContent;
     }
 
     private static String getString(byte[] bytes, String charsetName) {
@@ -293,5 +318,48 @@ public class Helper {
     private static double rad(double d)
     {
         return d * Math.PI / 180.0;
+    }
+
+    /**
+     * 将byte数组进行MD5加密
+     *
+     * @param cheByte 数组
+     * @return byte[]
+     */
+    public static byte[] getMD5(byte[] cheByte) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(cheByte);
+            return md.digest();
+        }catch (NoSuchAlgorithmException e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * 将指定路径的文件进行MD5加密
+     *
+     * @param path 文件路径
+     * @return byte[]
+     */
+    public static byte[] getFileMD5(String path) {
+        try {
+            byte[] buffer = new byte[8192];
+            int len = 0;
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            File mFile = new File(path);
+            FileInputStream fis = new FileInputStream(mFile);
+            while ((len = fis.read(buffer)) != -1) {
+                md.update(buffer, 0, len);
+            }
+            fis.close();
+            return md.digest();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
