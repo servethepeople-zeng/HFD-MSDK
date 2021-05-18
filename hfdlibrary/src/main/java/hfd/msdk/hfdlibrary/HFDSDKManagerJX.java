@@ -47,6 +47,7 @@ import hfd.msdk.model.HFDErrorCode;
 import hfd.msdk.utils.Helper;
 import hfd.msdk.utils.MediaCallbacks;
 
+import static hfd.msdk.model.HFDErrorCode.CONNECT_TIME_OUT;
 import static hfd.msdk.model.IConstants.calDay;
 import static hfd.msdk.model.IConstants.calHour;
 import static hfd.msdk.model.IConstants.calMinute;
@@ -67,7 +68,7 @@ public class HFDSDKManagerJX {
     //列表信息回调，变化回调，媒体文件接收回调
     private Thread callListThread, callChangeThread, callMediaThread;
     private Pipeline pipeline, psdkline;
-    private boolean accuTime = false;
+    private boolean accuTime;
     //是否正在下载中
     private boolean downloading = false;
     //是否开启媒体文件及内存变化的实时反馈
@@ -90,7 +91,7 @@ public class HFDSDKManagerJX {
     private byte[] vidMD5;
     //1 下载媒体列表 2 下载变化反馈 3 下载缩略图 4 下载原图 5下载视频文件
     private int downloadFlag = 0;
-    private long beginLoad = 0, beginLoad1 = 0, beginLoad2 = 0;
+    private long beginLoad = 0, beginLoad1 = 0, beginLoad2 = 0, startInit = 0;
     private float gVertical, gHorizontal;
     //接收保存视频流
     private FileOutputStream videoOutput;
@@ -160,6 +161,9 @@ public class HFDSDKManagerJX {
         changeMD5 = new byte[16];
         picMD5 = new byte[16];
         vidMD5 = new byte[16];
+        accuTime = false;
+
+        startInit = System.currentTimeMillis();
 
         //回调线程，返回回调信息
         sendCalThread = new Thread(new Runnable() {
@@ -175,9 +179,15 @@ public class HFDSDKManagerJX {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+                        if(System.currentTimeMillis() -startInit > 30000){
+                            commonCallback.onResult(CONNECT_TIME_OUT);
+                            break;
+                        }
                     }
                     Log.d("hfdsdkmanager", "hfdErrorCode =" + hfdErrorCode);
                     if (hfdErrorCode == null) {
+                        if(!accuTime)
+                            break;
                         try {
                             Thread.sleep(500);
                         } catch (InterruptedException e) {
@@ -185,10 +195,11 @@ public class HFDSDKManagerJX {
                         }
                     } else {
                         commonCallback.onResult(hfdErrorCode);
-                        break;
+                        hfdErrorCode = null;
+                        //break;
                     }
                 }
-                hfdErrorCode = null;
+                //hfdErrorCode = null;
             }
         });
         sendCalThread.start();
@@ -531,33 +542,45 @@ public class HFDSDKManagerJX {
     }
 
     //录像0开始 1停止
-    public void recordVideo(int type) {
+    public void recordVideo(int type, MediaCallbacks.CommonCallback<HFDErrorCode> commonCallback) {
         sendUserData(createMAVLink(type + 2, 0));
+        if(accuTime)
+            commonCallback.onResult(HFDErrorCode.GIMBAL_NOT_FOUND);
     }
 
     //视角切换 广角长焦模式，默认0 UVC，1 30x, 2 uvc+30x, 3 30x+uvc
-    public void changeView(int type) {
+    public void changeView(int type, MediaCallbacks.CommonCallback<HFDErrorCode> commonCallback) {
         sendUserData(createMAVLink(5, type));
+        if(accuTime)
+            commonCallback.onResult(HFDErrorCode.GIMBAL_NOT_FOUND);
     }
 
     //获取焦距
-    public int getZoom() {
+    public int getZoom(MediaCallbacks.CommonCallback<HFDErrorCode> commonCallback) {
+        if(accuTime)
+            commonCallback.onResult(HFDErrorCode.GIMBAL_NOT_FOUND);
         return qZoom;
     }
 
     //设置焦距6-31
-    public void setZoom(int zoom) {
+    public void setZoom(int zoom, MediaCallbacks.CommonCallback<HFDErrorCode> commonCallback) {
         sendUserData(createMAVLink(6, zoom));
+        if(accuTime)
+            commonCallback.onResult(HFDErrorCode.GIMBAL_NOT_FOUND);
     }
 
     //云台回中
-    public void gimbalReset() {
+    public void gimbalReset(MediaCallbacks.CommonCallback<HFDErrorCode> commonCallback) {
         sendUserData(createMAVLink(8, 0));
+        if(accuTime)
+            commonCallback.onResult(HFDErrorCode.GIMBAL_NOT_FOUND);
     }
 
     //云台转动
-    public void gimbalTurn(float wAngle, float hAngle) {
+    public void gimbalTurn(float wAngle, float hAngle,MediaCallbacks.CommonCallback<HFDErrorCode> commonCallback) {
         sendUserData(createMAVLink(9, 0));
+        if(accuTime)
+            commonCallback.onResult(HFDErrorCode.GIMBAL_NOT_FOUND);
     }
 
     //注销sdk
@@ -577,7 +600,8 @@ public class HFDSDKManagerJX {
             @Override
             public void onFailure(@NonNull DJIError error) {
                 Log.d("hfdsdkmanager", "send user data fail");
-                //hfdErrorCode = HFDErrorCode.GIMBAL_SYS_DOWN;
+                if(accuTime)
+                    hfdErrorCode = HFDErrorCode.GIMBAL_SYS_DOWN;
             }
         }, data);
     }
