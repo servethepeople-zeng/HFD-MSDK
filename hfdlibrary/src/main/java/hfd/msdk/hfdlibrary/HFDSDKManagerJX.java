@@ -48,6 +48,7 @@ import hfd.msdk.utils.Helper;
 import hfd.msdk.utils.MediaCallbacks;
 
 import static hfd.msdk.model.HFDErrorCode.CONNECT_TIME_OUT;
+import static hfd.msdk.model.HFDErrorCode.FLIGHT_MOP_SENDSUCCESS;
 import static hfd.msdk.model.IConstants.calDay;
 import static hfd.msdk.model.IConstants.calHour;
 import static hfd.msdk.model.IConstants.calMinute;
@@ -544,29 +545,24 @@ public class HFDSDKManagerJX {
     //录像0开始 1停止
     public void recordVideo(int type, MediaCallbacks.CommonCallback<HFDErrorCode> commonCallback) {
         sendUserData(createMAVLink(type + 2, 0));
-        if(accuTime)
-            commonCallback.onResult(HFDErrorCode.GIMBAL_NOT_FOUND);
+        commonCallback.onResult(accuTime?HFDErrorCode.GIMBAL_NOT_FOUND: FLIGHT_MOP_SENDSUCCESS);
     }
 
     //视角切换 广角长焦模式，默认0 UVC，1 30x, 2 uvc+30x, 3 30x+uvc
     public void changeView(int type, MediaCallbacks.CommonCallback<HFDErrorCode> commonCallback) {
         sendUserData(createMAVLink(5, type));
-        if(accuTime)
-            commonCallback.onResult(HFDErrorCode.GIMBAL_NOT_FOUND);
+        commonCallback.onResult(accuTime?HFDErrorCode.GIMBAL_NOT_FOUND: FLIGHT_MOP_SENDSUCCESS);
     }
 
     //获取焦距
-    public int getZoom(MediaCallbacks.CommonCallback<HFDErrorCode> commonCallback) {
-        if(accuTime)
-            commonCallback.onResult(HFDErrorCode.GIMBAL_NOT_FOUND);
-        return qZoom;
+    public void getZoom(MediaCallbacks.CommonCallback<String> commonCallback) {
+        commonCallback.onResult(accuTime?HFDErrorCode.GIMBAL_NOT_FOUND.getDesc(): (qZoom+""));
     }
 
     //设置焦距6-31
     public void setZoom(int zoom, MediaCallbacks.CommonCallback<HFDErrorCode> commonCallback) {
         sendUserData(createMAVLink(6, zoom));
-        if(accuTime)
-            commonCallback.onResult(HFDErrorCode.GIMBAL_NOT_FOUND);
+        commonCallback.onResult(accuTime?HFDErrorCode.GIMBAL_NOT_FOUND: FLIGHT_MOP_SENDSUCCESS);
     }
 
     //云台回中
@@ -600,8 +596,10 @@ public class HFDSDKManagerJX {
             @Override
             public void onFailure(@NonNull DJIError error) {
                 Log.d("hfdsdkmanager", "send user data fail");
-                if(accuTime)
+                if(accuTime) {
                     hfdErrorCode = HFDErrorCode.GIMBAL_SYS_DOWN;
+                    accuTime = false;
+                }
             }
         }, data);
     }

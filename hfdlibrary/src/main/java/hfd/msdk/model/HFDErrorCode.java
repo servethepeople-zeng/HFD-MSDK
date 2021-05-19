@@ -14,6 +14,7 @@ public enum HFDErrorCode {
     GIMBAL_DOWNFILE_LENGTH("E010","wrong file length"),
     GIMBAL_DOWNFILE_Fail("E011","File download failed"),
     CONNECT_TIME_OUT("E012","connection timed out"),
+    FLIGHT_MOP_SENDSUCCESS("0001","send commond to payload success"),
     INIT_SUCCESS("0000","sdk init success");
 
     private String value;
