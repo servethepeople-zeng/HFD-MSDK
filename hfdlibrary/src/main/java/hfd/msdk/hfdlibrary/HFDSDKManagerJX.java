@@ -197,7 +197,7 @@ public class HFDSDKManagerJX {
                     } else {
                         commonCallback.onResult(hfdErrorCode);
                         hfdErrorCode = null;
-                        //break;
+                        break;
                     }
                 }
                 //hfdErrorCode = null;
