@@ -610,7 +610,7 @@ public class HFDSDKManagerJX {
         payload.setStreamDataCallback(new Payload.StreamDataCallback() {
             @Override
             public void onGetStreamData(byte[] bytes, int len) {
-                //Log.d("hfdsdkmanager", "receive data length = "+bytes.length);
+                Log.d("hfdsdkmanager", "receive data length = "+bytes.length);
                 if (downloadFlag == 1) {
                     Log.d("hfdsdkmanager", "receive data list length = " + bytes.length);
                     if (bytes[0] == (byte) 253 && bytes[1] == (byte) 253 && bytes[2] == (byte) 1) {
