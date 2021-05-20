@@ -239,7 +239,7 @@ public class HFDSDKManagerJX {
                             mediaCallbacks.onFailure(HFDErrorCode.FLIGHT_MOP_DOWNING);
                             break;
                         }
-                        if(listBuff.position() > 0){
+                        if(listBuff.position() >= 0){
                             mediaCallbacks.onFailure(HFDErrorCode.FLIGHT_MOP_SENDFAIL);
                             break;
                         }
