@@ -222,7 +222,7 @@ public class HFDSDKManagerJX {
             @Override
             public void run() {
                 while (true) {
-                    if (System.currentTimeMillis() - beginLoad > 5000) {
+                    if (System.currentTimeMillis() - beginLoad > 30000) {
                         Log.d("hfdsdkmanager", "receive medial list file listBuff capacity" + listBuff.capacity() + ",limit =" + listBuff.limit() + ",position =" + listBuff.position());
                         if (listBuff.capacity() > 1 && listBuff.position() == listBuff.capacity()) {
                             byte[] listByte = new byte[listBuff.capacity()];
